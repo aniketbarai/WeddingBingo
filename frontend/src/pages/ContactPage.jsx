@@ -30,7 +30,7 @@ export default function GeminiContact() {
   };
 
   return (
-    <section id="contact" className="h-screen w-full bg-[#050505] text-[#f4f4f4] px-6 flex items-center justify-center overflow-hidden relative">
+    <section id="contact" data-navbar-theme="dark" className="h-screen w-full bg-[#050505] text-[#f4f4f4] px-6 flex items-center justify-center overflow-hidden relative">
       
       {/* Background soft glow to prevent "dead" black space */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#C6A75E]/5 blur-[120px] rounded-full pointer-events-none" />
@@ -56,7 +56,7 @@ export default function GeminiContact() {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
             className="text-gray-500 text-sm font-light max-w-xs leading-relaxed"
           >
-            Available for 2026 worldwide commissions.
+            Available in your services.
           </motion.p>
         </div>
 
@@ -67,39 +67,35 @@ export default function GeminiContact() {
           className="relative p-[1px] rounded-[2.5rem] overflow-hidden group"
         >
           {/* THE GOLDEN STRIP ANIMATION (The "Gemini" Border) */}
-          <div className="absolute inset-[-1000%] animate-[spin_5s_linear_infinite] bg-[conic-gradient(from_0deg,#C6A75E_0%,#000_20%,#000_80%,#C6A75E_100%)] opacity-40 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="absolute inset-[-1000%] animate-[spin_5s_linear_infinite] bg-[conic-gradient(from_0deg,#C6A75E_0%,#000_20%,#000_80%,#C6A75E_100%)] opacity-80 group-hover:opacity-100 transition-opacity duration-500" />
 
           {/* INNER FORM CONTAINER */}
           <div className="relative bg-[#0a0a0a] rounded-[2.5rem] p-8 lg:p-12 space-y-8">
-            <form onSubmit={handleSubmit} className="space-y-8">
-              <div className="grid grid-cols-2 gap-6">
+            <form onSubmit={handleSubmit} className="space-y-10">
+              <div className="">
                 <input 
                   type="text" name="name" value={formData.name} required onChange={handleChange}
                   placeholder="NAME"
-                  className="w-full bg-transparent border-b border-white/10 py-3 text-[10px] tracking-widest focus:outline-none focus:border-[#C6A75E] transition-all placeholder:text-gray-800"
-                />
-                <input 
-                  type="date" name="date" value={formData.date} onChange={handleChange}
-                  className="w-full bg-transparent border-b border-white/10 py-3 text-[10px] tracking-widest focus:outline-none focus:border-[#C6A75E] transition-all text-gray-600 uppercase"
+                  className="w-full bg-transparent border-b border-white/10 py-3 text-[15px] tracking-widest focus:outline-none focus:border-[#C6A75E] transition-all text-white placeholder:text-[#c6a75e]"
                 />
               </div>
 
               <input 
                 type="email" name="email" value={formData.email} required onChange={handleChange}
                 placeholder="EMAIL"
-                className="w-full bg-transparent border-b border-white/10 py-3 text-[10px] tracking-widest focus:outline-none focus:border-[#C6A75E] transition-all placeholder:text-gray-800"
+                className="w-full bg-transparent border-b border-white/10 py-3 text-[15px] tracking-widest focus:outline-none focus:border-[#C6A75E] transition-all text-white placeholder:text-[#c6a75e]"
               />
 
               <textarea 
                 name="message" rows="2" value={formData.message} required onChange={handleChange}
-                placeholder="YOUR STORY"
-                className="w-full bg-transparent border-b border-white/10 py-3 text-[10px] tracking-widest focus:outline-none focus:border-[#C6A75E] transition-all placeholder:text-gray-800 resize-none"
+                placeholder="YOUR MESSAGE"
+                className="w-full bg-transparent border-b border-white/10 py-3 text-[15px] tracking-widest focus:outline-none focus:border-[#C6A75E] transition-all placeholder:text-white placeholder:text-[#c6a75e] resize-none"
               />
 
               <div className="pt-4">
                 <button 
                   type="submit" disabled={loading}
-                  className="w-full py-4 rounded-2xl bg-[#C6A75E] text-black text-[10px] font-black uppercase tracking-[0.5em] hover:bg-white transition-all duration-500 disabled:opacity-50"
+                  className="w-full py-4 rounded-2xl bg-[#C6A75E] text-black text-[12px] font-black uppercase tracking-normal hover:bg-white transition-all duration-500 disabled:opacity-50"
                 >
                   {loading ? "..." : "Send Request"}
                 </button>

@@ -68,7 +68,7 @@ export default function PackagesSection() {
   };
 
   return (
-    <section ref={sectionRef} className="relative py-32 px-6 bg-[#050505] text-white overflow-hidden min-h-screen flex flex-col justify-center">
+    <section ref={sectionRef} data-navbar-theme="dark" className="relative py-32 px-6 bg-[#050505] text-white overflow-hidden min-h-screen flex flex-col justify-center">
       
       {/* BACKGROUND GLOW */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full max-w-4xl bg-[#C6A75E]/5 blur-[160px] rounded-full pointer-events-none" />

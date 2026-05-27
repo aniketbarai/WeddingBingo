@@ -26,6 +26,7 @@ const LandingPage = () => {
   return (
     <section
       id="home"
+      data-navbar-theme="dark"
       data-scroll
       data-scroll-speed="-1.3"
       className="relative h-screen w-full overflow-hidden"
@@ -36,6 +37,7 @@ const LandingPage = () => {
         className="absolute inset-0"
       >
         <img
+          rel="preload"
           src="https://images.unsplash.com/photo-1519741497674-611481863552"
           alt="Wedding"
           className="w-full h-[120%] object-cover"

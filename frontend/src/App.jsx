@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import { AnimatePresence } from "framer-motion";
 
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
@@ -9,44 +10,48 @@ import Services from "./components/ServicesSection";
 import Gallery from "./pages/Gallery";
 import IntroLoader from "./pages/IntroLoader";
 import PackagesSection from "./components/PackageSection";
+import WeddingPhotographyPage from "./pages/WeddingPhotography";
+import CinematicVideography from "./pages/CinematicVideography";
 
 function App() {
-  const hasLoaded = useRef(false); // 🔥 KEY FIX
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!hasLoaded.current) {
-      hasLoaded.current = true;
-
-      const timer = setTimeout(() => {
-        setLoading(false);
-      }, 3000);
-
-      return () => clearTimeout(timer);
-    } else {
-      // 🚫 Prevent loader on navigation
+    const timer = setTimeout(() => {
       setLoading(false);
-    }
+    }, 3000);
+
+    return () => clearTimeout(timer);
   }, []);
 
-  if (loading) {
-    return <IntroLoader />;
-  }
-
   return (
-    <>
-      <Navbar />
+  <div className="bg-[#050505] min-h-screen">
 
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<AboutSection />} />
-        <Route path="/packages" element={<PackagesSection />} />
-        <Route path="/gallery" element={<Gallery />} />
-        <Route path="/services" element={<Services />} />
-        <Route path="/contact" element={<ContactPage />} />
-      </Routes>
-    </>
-  );
+    {/* LOADER */}
+    <AnimatePresence>
+      {loading && <IntroLoader />}
+    </AnimatePresence>
+
+    {/* WEBSITE (NO WRAPPER ANIMATION) */}
+    {!loading && (
+      <>
+        <Navbar />
+
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<AboutSection />} />
+          <Route path="/packages" element={<PackagesSection />} />
+          <Route path="/gallery" element={<Gallery />} />
+          <Route path="/services" element={<Services />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/services/weddingp" element={<WeddingPhotographyPage />} />
+          <Route path="/services/cinematic" element={<CinematicVideography />} />
+        </Routes>
+      </>
+    )}
+
+  </div>
+);
 }
 
 export default App;

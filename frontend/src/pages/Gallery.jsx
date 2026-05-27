@@ -59,7 +59,7 @@ export default function Gallery() {
   };
 
   return (
-    <div className="bg-white min-h-screen font-sans text-slate-900 selection:bg-blue-100">
+    <div data-navbar-theme="light" className="bg-white min-h-screen font-sans text-slate-900 selection:bg-blue-100">
       
       {/* MINIMAL NAV-SPACER */}
       <div className="h-24"></div>

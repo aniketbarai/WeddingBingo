@@ -102,7 +102,7 @@ export default function Footer() {
         <div className="border-t border-white/5 pt-12 flex flex-col md:flex-row justify-between items-center gap-6">
           
           <p className="text-[10px] text-gray-600 uppercase tracking-widest text-center md:text-left">
-            © {currentYear} Wedding Bingo • Crafted by <span className="text-gray-400">PrimeCode Studio</span>
+            © {currentYear} Wedding Bingo • Crafted by <span className="text-gray-400"><a href="https://abarai.netlify.app/">Aniket Barai</a></span>
           </p>
 
           <button 

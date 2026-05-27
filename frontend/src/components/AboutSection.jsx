@@ -32,7 +32,7 @@ export default function AboutSection() {
   const y = useTransform(scrollYProgress, [0, 1], ["-10%", "10%"]);
 
   return (
-    <section ref={containerRef} className="relative bg-[#fcfcfc] text-black py-32 px-6 overflow-hidden">
+    <section ref={containerRef} data-navbar-theme="light" className="relative bg-[#fcfcfc] text-black py-32 px-6 overflow-hidden">
       
       {/* BACKGROUND ACCENT - Subtle floating number or text */}
       <div className="absolute top-20 left-10 opacity-[0.03] pointer-events-none select-none">

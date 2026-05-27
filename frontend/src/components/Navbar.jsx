@@ -1,185 +1,245 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 // eslint-disable-next-line no-unused-vars
-import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, User, LogOut, LayoutDashboard, ChevronRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { AnimatePresence, motion, useScroll, useSpring } from "framer-motion";
+import { Link, NavLink } from "react-router-dom";
+import { Menu, X } from "lucide-react";
+import { useNavbarTheme } from "../hooks/useNavbarTheme";
+
+const navLinks = [
+  { name: "Home", link: "/" },
+  { name: "About", link: "/about" },
+  { name: "Packages", link: "/packages" },
+  { name: "Services", link: "/services" },
+  { name: "Gallery", link: "/gallery" },
+  { name: "Contact", link: "/contact" },
+];
+
+const focusRing =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C6A75E] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent";
 
 const Navbar = () => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [scrolled, setScrolled] = useState(false);
-    const [showNavbar, setShowNavbar] = useState(true);
-    const [darkText, setDarkText] = useState(false);
-    const [isLoggedIn] = useState(() => !!localStorage.getItem("token"));
+  const [isOpen, setIsOpen] = useState(false);
+  const { hidden, isLight, scrolled } = useNavbarTheme();
+  const { scrollYProgress } = useScroll();
+  const progressScale = useSpring(scrollYProgress, {
+    stiffness: 140,
+    damping: 28,
+    mass: 0.4,
+  });
 
-    const navLinks = [
-        { name: "Home", link: "/" },
-        { name: "About", link: "/about" },
-        { name: "Packages", link: "/packages" },
-        { name: "Services", link: "/services" },
-        { name: "Gallery", link: "/gallery" },
-        { name: "Contact", link: "/contact" },
-    ];
+  const solid = scrolled || isOpen;
+  const colors = useMemo(() => {
+    if (isOpen) {
+      return {
+        accent: "text-[#C6A75E]",
+        border: "border-white/10",
+        cta: "border-[#C6A75E]/70 text-[#C6A75E] hover:bg-[#C6A75E] hover:text-black",
+        icon: "text-white hover:bg-white/10",
+        logo: "text-[#C6A75E]",
+        logoRest: "text-white",
+        navText: "text-white",
+        panel: "bg-[#050505]/95",
+        underline: "bg-[#C6A75E]",
+      };
+    }
 
-    useEffect(() => {
-        let lastScrollY = window.scrollY;
+    if (isLight) {
+      return {
+        accent: "text-[#9b7b36]",
+        border: solid ? "border-black/10" : "border-transparent",
+        cta: solid
+          ? "bg-black text-white hover:bg-[#C6A75E] hover:text-black"
+          : "border-black/20 text-black hover:border-black hover:bg-black hover:text-white",
+        icon: "text-black hover:bg-black/5",
+        logo: "text-[#9b7b36]",
+        logoRest: "text-black",
+        navText: "text-black",
+        panel: solid ? "bg-white/72" : "bg-white/0",
+        underline: "bg-black",
+      };
+    }
 
-        const handleScroll = () => {
-            const currentScrollY = window.scrollY;
-            setScrolled(currentScrollY > 20);
+    return {
+      accent: "text-[#C6A75E]",
+      border: solid ? "border-white/10" : "border-transparent",
+      cta: "border-[#C6A75E]/70 text-[#C6A75E] hover:bg-[#C6A75E] hover:text-black",
+      icon: "text-white hover:bg-white/10",
+      logo: "text-[#C6A75E]",
+      logoRest: "text-white",
+      navText: "text-white",
+      panel: solid ? "bg-black/[0.46]" : "bg-transparent",
+      underline: "bg-[#C6A75E]",
+    };
+  }, [isLight, isOpen, solid]);
 
-            // Hide navbar on scroll down, show on scroll up
-            if (window.innerWidth >= 1024) {
-                if (currentScrollY > lastScrollY && currentScrollY > 100) {
-                    setShowNavbar(false);
-                } else {
-                    setShowNavbar(true);
-                }
-            }
-            lastScrollY = currentScrollY;
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? "hidden" : "";
 
-            // Section color detection
-            const lightSections = document.querySelectorAll("[data-light]");
-            let isLight = false;
-            const triggerPoint = 80; // Detect color near the top
-
-            lightSections.forEach((section) => {
-                const rect = section.getBoundingClientRect();
-                if (rect.top <= triggerPoint && rect.bottom >= triggerPoint) {
-                    isLight = true;
-                }
-            });
-            setDarkText(isLight);
-        };
-
-        // const token = localStorage.getItem("token");
-        // setIsLoggedIn(!!token); // Removed to avoid setState in effect
-
-        window.addEventListener("scroll", handleScroll);
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, []);
-
-    const handleLogout = () => {
-        localStorage.removeItem("token");
-        window.location.reload();
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") setIsOpen(false);
     };
 
-    return (
-        <nav
-            className={`fixed w-full z-[100] transition-all duration-700 ease-in-out py-3 sm:py-5
-            ${showNavbar ? "translate-y-0" : "-translate-y-full"} 
-            ${scrolled ? "backdrop-blur-xl shadow-2xl py-2 sm:py-3" : "bg-transparent"} 
-            ${darkText ? "text-slate-900" : "text-white"}`}
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isOpen]);
+
+  return (
+    <motion.nav
+      data-navbar-root
+      aria-label="Primary navigation"
+      initial={false}
+      animate={{
+        filter: hidden && !isOpen ? "blur(6px)" : "blur(0px)",
+        opacity: hidden && !isOpen ? 0 : 1,
+        y: hidden && !isOpen ? -88 : 0,
+      }}
+      transition={{
+        duration: hidden && !isOpen ? 0.34 : 0.46,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+      className={`
+        fixed left-0 top-0 z-[100] w-full
+        border-b ${colors.border} ${colors.panel}
+        ${solid ? "shadow-[0_18px_60px_rgba(0,0,0,0.16)] backdrop-blur-2xl" : "shadow-none backdrop-blur-0"}
+        transition-[background-color,border-color,box-shadow,backdrop-filter,padding] duration-500 ease-out
+      `}
+    >
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:h-[4.5rem] sm:px-6 lg:h-20 lg:px-8">
+        <Link
+          to="/"
+          aria-label="Wedding Bingo home"
+          onClick={() => setIsOpen(false)}
+          className={`group inline-flex shrink-0 items-baseline font-serif ${focusRing}`}
         >
-            <div className="max-w-7xl mx-auto px-8 flex justify-between items-center">
-                
-                {/* 🎨 Premium Logo */}
-                <Link to="/" className="group flex items-center gap-2">
-                    <h1 className={`text-2xl sm:text-3xl font-serif tracking-tighter transition-colors duration-500 ${
-                        darkText ? "text-black" : "text-[#C6A75E]"
-                    }`}>
-                        Wedding<span className={darkText ? "text-slate-500" : "text-white"}>Bingo</span>
-                    </h1>
-                </Link>
+          <span className={`text-[1.4rem] tracking-tight sm:text-2xl lg:text-[1.7rem] ${colors.logo} transition-colors duration-500`}>
+            Wedding
+          </span>
+          <span className={`text-[1.4rem] tracking-tight sm:text-2xl lg:text-[1.7rem] ${colors.logoRest} transition-colors duration-500`}>
+            Bingo
+          </span>
+        </Link>
 
-                {/* 🧭 Desktop Links */}
-                <ul className="hidden lg:flex gap-10 font-medium text-xs uppercase tracking-[0.2em]">
-                    {navLinks.map((item, index) => (
-                        <motion.li key={index} whileHover={{ y: -1 }} className="relative group overflow-hidden">
-                            <Link to={item.link} className="hover:opacity-70 transition-opacity duration-300">
-                                {item.name}
-                            </Link>
-                            <span className={`absolute left-0 bottom-0 w-0 h-[1px] transition-all duration-500 group-hover:w-full ${
-                                darkText ? "bg-black" : "bg-[#C6A75E]"
-                            }`} />
-                        </motion.li>
-                    ))}
-                </ul>
-
-                {/* 🔐 Auth & CTA */}
-                <div className="hidden lg:flex items-center gap-8">
-                    {!isLoggedIn ? (
-                        <Link to="/login" className="hover:scale-110 transition-transform duration-300">
-                            <User size={20} className={darkText ? "text-black" : "text-[#C6A75E]"} />
-                        </Link>
-                    ) : (
-                        <div className="flex items-center gap-5">
-                            <Link to="/dashboard">
-                                <LayoutDashboard size={20} className={darkText ? "text-black" : "text-[#C6A75E]"} />
-                            </Link>
-                            <button onClick={handleLogout} className="text-red-500/80 hover:text-red-500">
-                                <LogOut size={20} />
-                            </button>
-                        </div>
-                    )}
-
-                    <button className={`group relative px-8 py-3 rounded-full text-xs font-bold uppercase tracking-widest overflow-hidden transition-all duration-500
-                        ${darkText 
-                            ? "bg-black text-white hover:shadow-xl" 
-                            : "border border-[#C6A75E] text-[#C6A75E] hover:bg-[#C6A75E] hover:text-black"}`}>
-                        <span className="relative z-10 flex items-center gap-2">
-                            Inquiry Now <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                        </span>
-                    </button>
-                </div>
-
-                {/* 📱 Mobile Toggle */}
-                <button 
-                    onClick={() => setIsOpen(!isOpen)}
-                    className="lg:hidden p-2 rounded-full hover:bg-white/10 transition-colors"
-                >
-                    {isOpen ? <X size={28} /> : <Menu size={28} />}
-                </button>
-            </div>
-
-            {/* 📱 Full-Screen Mobile Overlay */}
-            <AnimatePresence>
-                {isOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 1.1 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 1.1 }}
-                        className="fixed inset-0 h-screen w-full bg-black flex flex-col items-center justify-center z-[101]"
-                    >
-                        <button 
-                            onClick={() => setIsOpen(false)}
-                            className="absolute top-8 right-8 text-white/50 hover:text-white"
-                        >
-                            <X size={40} strokeWidth={1} />
-                        </button>
-
-                        <div className="flex flex-col gap-6 text-center">
-                            {navLinks.map((item, index) => (
-                                <motion.div
-                                    key={index}
-                                    initial={{ y: 20, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    transition={{ delay: index * 0.1 }}
-                                >
-                                    <Link
-                                        to={item.link}
-                                        onClick={() => setIsOpen(false)}
-                                        className="text-4xl sm:text-5xl font-serif italic text-white hover:text-[#C6A75E] transition-colors"
-                                    >
-                                        {item.name}
-                                    </Link>
-                                </motion.div>
-                            ))}
-                        </div>
-
-                        <motion.div 
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.5 }}
-                            className="mt-20 flex gap-8 text-[#C6A75E]"
-                        >
-                            <Link to="/login" onClick={() => setIsOpen(false)}><User size={24}/></Link>
-                            {isLoggedIn && <button onClick={handleLogout}><LogOut size={24}/></button>}
-                        </motion.div>
-                    </motion.div>
+        <ul className={`hidden items-center gap-7 text-[12px] font-semibold uppercase tracking-[0.22em] ${colors.navText} lg:flex`}>
+          {navLinks.map((item) => (
+            <motion.li key={item.link} whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 360, damping: 24 }}>
+              <NavLink
+                to={item.link}
+                end={item.link === "/"}
+                className={({ isActive }) =>
+                  `group relative inline-flex py-2.5 transition-colors duration-300 ${focusRing} ${
+                    isActive ? colors.accent : "hover:opacity-70"
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <span>{item.name}</span>
+                    <motion.span
+                      layoutId={isActive ? "active-nav-underline" : undefined}
+                      className={`absolute bottom-1 left-0 h-px ${colors.underline}`}
+                      initial={false}
+                      animate={{ width: isActive ? "100%" : "0%" }}
+                      whileHover={{ width: "100%" }}
+                      transition={{ duration: 0.28, ease: "easeOut" }}
+                    />
+                  </>
                 )}
-            </AnimatePresence>
-        </nav>
-    );
+              </NavLink>
+            </motion.li>
+          ))}
+        </ul>
+
+        <div className="hidden items-center lg:flex">
+          <Link
+            to="/contact"
+            className={`
+              rounded-full border px-6 py-2.5 text-[9px] font-bold uppercase tracking-[0.28em]
+              transition-all duration-500 hover:-translate-y-0.5 active:translate-y-0 ${colors.cta} ${focusRing}
+            `}
+          >
+            Inquiry Now
+          </Link>
+        </div>
+
+        <button
+          type="button"
+          aria-label={isOpen ? "Close menu" : "Open menu"}
+          aria-expanded={isOpen}
+          aria-controls="mobile-navigation"
+          onClick={() => setIsOpen((current) => !current)}
+          className={`inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-300 lg:hidden ${colors.icon} ${focusRing}`}
+        >
+          {isOpen ? <X size={24} strokeWidth={1.6} /> : <Menu size={24} strokeWidth={1.6} />}
+        </button>
+      </div>
+
+      <motion.div
+        aria-hidden="true"
+        className="h-px origin-left bg-gradient-to-r from-transparent via-[#C6A75E] to-transparent"
+        style={{ scaleX: progressScale }}
+      />
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            id="mobile-navigation"
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.28, ease: "easeOut" }}
+            className="fixed inset-x-0 top-16 z-[101] min-h-[calc(100dvh-4rem)] border-t border-white/10 bg-[#050505]/96 px-6 py-8 text-white shadow-2xl backdrop-blur-2xl sm:top-[4.5rem] sm:min-h-[calc(100dvh-4.5rem)] lg:hidden"
+          >
+            <div className="mx-auto flex max-w-md flex-col">
+              <div className="space-y-1">
+                {navLinks.map((item, index) => (
+                  <motion.div
+                    key={item.link}
+                    initial={{ opacity: 0, y: 18 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.045, duration: 0.32 }}
+                  >
+                    <NavLink
+                      to={item.link}
+                      end={item.link === "/"}
+                      onClick={() => setIsOpen(false)}
+                      className={({ isActive }) =>
+                        `flex items-center justify-between border-b border-white/[0.08] py-5 font-serif text-4xl italic transition-colors duration-300 sm:text-5xl ${focusRing} ${
+                          isActive ? "text-[#C6A75E]" : "text-white hover:text-[#C6A75E]"
+                        }`
+                      }
+                    >
+                      {item.name}
+                      <span className="text-xs not-italic tracking-[0.35em] text-white/35">
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                    </NavLink>
+                  </motion.div>
+                ))}
+              </div>
+
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.34 }}
+                className="mt-10"
+              >
+                <Link
+                  to="/contact"
+                  onClick={() => setIsOpen(false)}
+                  className={`inline-flex w-full items-center justify-center rounded-full border border-[#C6A75E]/70 px-8 py-4 text-xs font-bold uppercase tracking-[0.3em] text-[#C6A75E] transition-all duration-500 hover:bg-[#C6A75E] hover:text-black ${focusRing}`}
+                >
+                  Inquiry Now
+                </Link>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.nav>
+  );
 };
 
 export default Navbar;
