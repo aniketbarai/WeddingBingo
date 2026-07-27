@@ -2,6 +2,7 @@ import { Instagram, Facebook, Mail, MapPin, ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 // eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
+import { NAV_LINKS } from "../config/navigation";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -63,13 +64,13 @@ export default function Footer() {
           <div className="md:col-span-3">
             <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-[#C6A75E] mb-8">Navigate</h4>
             <ul className="space-y-4">
-              {["Home", "Services", "Portfolio", "Contact"].map((item) => (
-                <li key={item}>
+              {NAV_LINKS.filter((item) => item.name !== "Home").map((item) => (
+                <li key={item.link}>
                   <Link 
-                    to={`/${item === "Home" ? "" : item.toLowerCase()}`}
+                    to={item.link}
                     className="text-gray-400 hover:text-white transition-colors flex items-center group text-sm font-light"
                   >
-                    {item}
+                    {item.name}
                     <ArrowUpRight size={12} className="ml-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all text-[#C6A75E]" />
                   </Link>
                 </li>
@@ -103,6 +104,7 @@ export default function Footer() {
           
           <p className="text-[10px] text-gray-600 uppercase tracking-widest text-center md:text-left">
             © {currentYear} Wedding Bingo • Crafted by <span className="text-gray-400"><a href="https://abarai.netlify.app/">Aniket Barai</a></span>
+            {" "}• <Link to="/admin/login" className="hover:text-[#C6A75E] transition-colors">Admin</Link>
           </p>
 
           <button 

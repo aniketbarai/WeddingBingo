@@ -1,10 +1,18 @@
 import { useEffect, useState, useCallback } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
+import BASE_URL from "../config";
+
+// Uploaded images are stored as backend-relative paths ("/uploads/...").
+// Prepend BASE_URL so the browser requests them from the API origin,
+// not the frontend's own origin. Leaves already-absolute URLs untouched
+// in case a future CDN/S3 migration stores full URLs instead.
+const resolveImageSrc = (src) => (/^https?:\/\//i.test(src) ? src : `${BASE_URL}${src}`);
 
 export default function Gallery() {
   const [images, setImages] = useState([]);
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [sortBy, setSortBy] = useState("newest");
   const [selected, setSelected] = useState(null);
   const [myLikes, setMyLikes] = useState(() => JSON.parse(localStorage.getItem("user_likes") || "[]"));
@@ -13,20 +21,29 @@ export default function Gallery() {
   const fetchImages = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/images?page=${page}&limit=12&sort=${sortBy}`);
+      const res = await fetch(`${BASE_URL}/api/images?page=${page}&limit=12&sort=${sortBy}`);
       const data = await res.json();
-      setImages(data);
+      // Backend returns { images, total, page, pages } on success, or an
+      // { error } object on failure (DB down, etc). Guard against setting
+      // non-array state, which was crashing images.map() below.
+      if (res.ok && Array.isArray(data?.images)) {
+        setImages(data.images);
+        setTotalPages(data.pages || 1);
+      } else {
+        console.error("Unexpected images response:", data);
+        setImages([]);
+        setTotalPages(1);
+      }
     } catch (err) {
       console.error("Fetch error:", err);
+      setImages([]);
+      setTotalPages(1);
     } finally {
       setTimeout(() => setLoading(false), 400);
     }
   }, [page, sortBy]);
 
   useEffect(() => {
-    // const saved = JSON.parse(localStorage.getItem("user_likes") || "[]");
-    // setMyLikes(saved);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchImages();
   }, [fetchImages]);
 
@@ -34,7 +51,7 @@ export default function Gallery() {
     if (e) e.stopPropagation();
     if (myLikes.includes(id)) return;
     try {
-      const res = await fetch(`/api/like/${id}`, { method: "POST" });
+      const res = await fetch(`${BASE_URL}/api/like/${id}`, { method: "POST" });
       const data = await res.json();
       if (res.ok) {
         const updatedLikes = [...myLikes, id];
@@ -49,7 +66,7 @@ export default function Gallery() {
   const handleOpen = async (img) => {
     setSelected(img);
     try {
-      const res = await fetch(`/api/click/${img._id}`, { method: "POST" });
+      const res = await fetch(`${BASE_URL}/api/click/${img._id}`, { method: "POST" });
       const data = await res.json();
       if (data.success) {
         setImages(prev => prev.map(item => item._id === img._id ? { ...item, clicks: data.clicks } : item));
@@ -70,7 +87,7 @@ export default function Gallery() {
         <header className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
           <div className="space-y-1">
             <h1 className="text-4xl font-semibold tracking-tight text-slate-900">Portrait Gallery</h1>
-            <p className="text-slate-400 text-sm">GP Mumbai Student Archive • 2026 Edition</p>
+            <p className="text-slate-400 text-sm">Wedding Bingo Archive • 2026 Edition</p>
           </div>
 
           <div className="flex p-1 bg-slate-100 rounded-lg">
@@ -107,7 +124,9 @@ export default function Gallery() {
               >
                 <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-slate-100 shadow-sm transition-shadow hover:shadow-xl hover:shadow-slate-200/50">
                   <img 
-                    src={img.src} 
+                    src={resolveImageSrc(img.src)} 
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
                     alt="Portrait" 
                   />
@@ -142,10 +161,11 @@ export default function Gallery() {
           >
             ← Previous
           </button>
-          <span className="text-xs font-bold text-slate-900 tracking-widest uppercase">Page {page}</span>
+          <span className="text-xs font-bold text-slate-900 tracking-widest uppercase">Page {page} of {totalPages}</span>
           <button 
+            disabled={page >= totalPages}
             onClick={() => {setPage(page + 1); window.scrollTo({top:0, behavior:'smooth'})}}
-            className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest"
+            className="text-xs font-bold text-slate-400 hover:text-slate-900 disabled:opacity-0 transition-colors uppercase tracking-widest"
           >
             Next →
           </button>
@@ -166,7 +186,7 @@ export default function Gallery() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="aspect-[3/4] w-full relative">
-                <img src={selected.src} className="w-full h-full object-cover" />
+                <img src={resolveImageSrc(selected.src)} className="w-full h-full object-cover" />
                 <button 
                   onClick={() => setSelected(null)}
                   className="absolute top-4 right-4 w-8 h-8 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/40 transition-colors"

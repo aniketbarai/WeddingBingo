@@ -13,6 +13,11 @@ import connectDB from "./config/db.js";
 
 connectDB();
 
+import { seedAdmin } from './utils/seedAdmin.js';
+
+// Seed single admin account (idempotent)
+await seedAdmin();
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {

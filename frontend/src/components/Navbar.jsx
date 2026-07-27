@@ -4,15 +4,9 @@ import { AnimatePresence, motion, useScroll, useSpring } from "framer-motion";
 import { Link, NavLink } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { useNavbarTheme } from "../hooks/useNavbarTheme";
+import { NAV_LINKS } from "../config/navigation";
 
-const navLinks = [
-  { name: "Home", link: "/" },
-  { name: "About", link: "/about" },
-  { name: "Packages", link: "/packages" },
-  { name: "Services", link: "/services" },
-  { name: "Gallery", link: "/gallery" },
-  { name: "Contact", link: "/contact" },
-];
+const navLinks = NAV_LINKS;
 
 const focusRing =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C6A75E] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent";

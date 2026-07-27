@@ -7,14 +7,10 @@ import TestimonialSection from "../components/TestimonialSection"
 import CinematicHero from "./CinematicHero"
 import ContactPage from "./ContactPage"
 import LandingPage from "./LandingPage"
-// import LocomotiveScroll from 'locomotive-scroll';
 
 const Home = () => {
-
-    // const locomotiveScroll = new LocomotiveScroll();
-
     return (
-        <div data-scroll-container className='min-h-screen w-full bg-[#0F0F0F]'>
+        <div className='min-h-screen w-full bg-[#0F0F0F]'>
             <LandingPage />
             <CinematicHero />
             <AboutSection />

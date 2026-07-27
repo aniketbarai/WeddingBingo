@@ -25,6 +25,7 @@ const services = [
   {
     number: "03",
     title: "Pre-Wedding Shoots",
+    slug:"prewedshoots",
     description:
       "Creative and personalized pre-wedding concepts in stunning locations.",
     image:
@@ -33,6 +34,7 @@ const services = [
   {
     number: "04",
     title: "Drone Coverage",
+    slug:"droneCover",
     description:
       "Breathtaking aerial visuals that elevate your wedding film experience.",
     image:
