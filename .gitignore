@@ -12,7 +12,9 @@ dist
 dist-ssr
 *.local
 
-# Secrets - never commit these
+# Runtime media and secrets - never commit these
+/backend/uploads/
+/uploads/
 .env
 .env.*
 !.env.example

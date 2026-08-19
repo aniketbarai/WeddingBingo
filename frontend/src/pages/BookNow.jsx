@@ -1,17 +1,18 @@
-import { Helmet } from 'react-helmet-async';
-import Container from '../components/ui/Container.jsx';
+import { useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { api } from "../api/client.js";
+import Container from "../components/ui/Container.jsx";
+
+const initialForm = { coupleNames: "", email: "", weddingDate: "", venue: "", location: "", packageName: "", notes: "" };
 
 export default function BookNow() {
-  return (
-    <>
-      <Helmet>
-        <title>Book Now | Wedding Studio</title>
-      </Helmet>
-      <Container className="py-12">
-        <h1 className="text-3xl text-white mb-4">Book Now</h1>
-        <p className="text-gray-300">Booking form will be wired to API.</p>
-      </Container>
-    </>
-  );
+  const [form, setForm] = useState(initialForm);
+  const [state, setState] = useState({ loading: false, message: "", error: false });
+  const update = (event) => setForm((current) => ({ ...current, [event.target.name]: event.target.value }));
+  const submit = async (event) => {
+    event.preventDefault(); setState({ loading: true, message: "", error: false });
+    try { await api.post("/api/booking-requests", form); setForm(initialForm); setState({ loading: false, message: "Thank you. Your date request has been received.", error: false }); }
+    catch { setState({ loading: false, message: "We could not submit your request. Please try again or contact us directly.", error: true }); }
+  };
+  return <><Helmet><title>Book Now | Wedding Studio</title></Helmet><main className="min-h-screen bg-[#050505] text-white"><Container className="py-24"><div className="mx-auto max-w-3xl"><p className="text-xs uppercase tracking-[.3em] text-[#c6a75e]">Begin the conversation</p><h1 className="mt-3 font-serif text-5xl">Reserve your date.</h1><p className="mt-4 max-w-xl text-sm leading-7 text-white/45">Tell us a little about your celebration. We will review your date and respond with the next steps.</p><form onSubmit={submit} className="mt-12 grid gap-5 md:grid-cols-2"><label className="text-xs uppercase tracking-widest text-white/50">Couple names<input required name="coupleNames" value={form.coupleNames} onChange={update} className="mt-2 w-full rounded-xl border border-white/10 bg-white/[.04] p-3 text-sm normal-case tracking-normal outline-none focus:border-[#c6a75e]" /></label><label className="text-xs uppercase tracking-widest text-white/50">Email<input required type="email" name="email" value={form.email} onChange={update} className="mt-2 w-full rounded-xl border border-white/10 bg-white/[.04] p-3 text-sm normal-case tracking-normal outline-none focus:border-[#c6a75e]" /></label><label className="text-xs uppercase tracking-widest text-white/50">Wedding date<input required type="date" name="weddingDate" value={form.weddingDate} onChange={update} className="mt-2 w-full rounded-xl border border-white/10 bg-white/[.04] p-3 text-sm normal-case tracking-normal outline-none focus:border-[#c6a75e]" /></label><label className="text-xs uppercase tracking-widest text-white/50">Venue<input name="venue" value={form.venue} onChange={update} className="mt-2 w-full rounded-xl border border-white/10 bg-white/[.04] p-3 text-sm normal-case tracking-normal outline-none focus:border-[#c6a75e]" /></label><label className="text-xs uppercase tracking-widest text-white/50">Location<input name="location" value={form.location} onChange={update} className="mt-2 w-full rounded-xl border border-white/10 bg-white/[.04] p-3 text-sm normal-case tracking-normal outline-none focus:border-[#c6a75e]" /></label><label className="text-xs uppercase tracking-widest text-white/50">Package<input name="packageName" value={form.packageName} onChange={update} className="mt-2 w-full rounded-xl border border-white/10 bg-white/[.04] p-3 text-sm normal-case tracking-normal outline-none focus:border-[#c6a75e]" /></label><label className="text-xs uppercase tracking-widest text-white/50 md:col-span-2">Notes<textarea name="notes" value={form.notes} onChange={update} className="mt-2 min-h-32 w-full rounded-xl border border-white/10 bg-white/[.04] p-3 text-sm normal-case tracking-normal outline-none focus:border-[#c6a75e]" /></label><div className="md:col-span-2"><button disabled={state.loading} className="rounded-xl bg-[#c6a75e] px-6 py-3 text-sm font-semibold text-black disabled:opacity-50">{state.loading ? "Sending request…" : "Request this date"}</button>{state.message && <p className={`mt-4 text-sm ${state.error ? "text-red-300" : "text-emerald-300"}`}>{state.message}</p>}</div></form></div></Container></main></>;
 }
-

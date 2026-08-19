@@ -1,25 +1,19 @@
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
-
-// Fix for __dirname in ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// 👇 FORCE LOAD .env
-dotenv.config({ path: path.join(__dirname, ".env") });
+import "dotenv/config";
 import app from "./app.js";
 import connectDB from "./config/db.js";
+import { seedAdmin } from "./utils/seedAdmin.js";
 
-connectDB();
+const PORT = Number(process.env.PORT || 5000);
 
-import { seedAdmin } from './utils/seedAdmin.js';
+const start = async () => {
+  try {
+    await connectDB();
+    await seedAdmin();
+    app.listen(PORT, () => console.log(`WeddingBingo backend running on port ${PORT}`));
+  } catch (error) {
+    console.error(`Backend startup failed: ${error.message}`);
+    process.exit(1);
+  }
+};
 
-// Seed single admin account (idempotent)
-await seedAdmin();
-
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-  console.log(`Server running on ${PORT}`);
-});
+start();

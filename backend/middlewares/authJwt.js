@@ -12,8 +12,16 @@ export const cookieOptions = (remember = false) => ({
   path: "/",
 });
 
+const isAllowedBrowserOrigin = (req) => {
+  if (!["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) return true;
+  const origin = req.headers.origin || req.headers.referer;
+  if (!origin || !process.env.FRONTEND_URL) return true;
+  return origin.startsWith(process.env.FRONTEND_URL);
+};
+
 export const requireAdminAuth = async (req, res, next) => {
   try {
+    if (!isAllowedBrowserOrigin(req)) return res.status(403).json({ success: false, message: "Request origin is not allowed" });
     const bearer = req.headers.authorization?.startsWith("Bearer ") ? req.headers.authorization.slice(7) : null;
     const token = req.cookies?.[SESSION_COOKIE] || bearer;
     if (!token) return res.status(401).json({ success: false, message: "Authentication required" });

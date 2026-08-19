@@ -2,6 +2,7 @@ import Wedding from "../models/Wedding.js";
 import Inquiry from "../models/Inquiry.js";
 import { Booking, Testimonial, Package } from "../models/MvpContent.js";
 import { recordAudit } from "../utils/audit.js";
+import validator from "validator";
 
 export const resources = { weddings: Wedding, inquiries: Inquiry, bookings: Booking, testimonials: Testimonial, packages: Package };
 export const permissionNames = { weddings: "portfolio", inquiries: "inquiries", bookings: "bookings", testimonials: "testimonials", packages: "packages" };
@@ -49,6 +50,14 @@ export const addInquiryNote = async (req, res) => {
   if (!inquiry) return res.status(404).json({ success: false, message: "Inquiry not found" });
   await recordAudit(req, "inquiry.note_added", "inquiries", inquiry._id);
   res.json({ success: true, item: inquiry });
+};
+
+export const createBookingRequest = async (req, res) => {
+  const { coupleNames, email, weddingDate, venue, location, packageName, notes } = req.body;
+  if (!coupleNames?.trim() || !validator.isEmail(String(email || "")) || !weddingDate) return res.status(400).json({ success: false, message: "Couple names, valid email, and wedding date are required" });
+  const booking = await Booking.create({ coupleNames: coupleNames.trim(), email: email.toLowerCase().trim(), weddingDate, venue, location, packageName, notes, status: "Inquiry" });
+  await Inquiry.create({ name: coupleNames.trim(), email: email.toLowerCase().trim(), weddingDate, venue, location, message: notes, source: "booking-form", status: "New" });
+  res.status(201).json({ success: true, bookingId: booking._id });
 };
 
 export const updateInquiryStatus = async (req, res) => {

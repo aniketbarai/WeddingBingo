@@ -17,6 +17,10 @@ export const forgotPasswordValidator = [
 export const resetPasswordValidator = [
   param('token').optional().isString().withMessage('Invalid reset token'),
   body('resetToken').optional().isString().withMessage('Invalid reset token'),
+  body().custom((_, { req }) => {
+    if (!req.params.token && !req.body.resetToken) throw new Error('A reset token is required');
+    return true;
+  }),
   body('newPassword').isString().isLength({ min: 6 }).withMessage('New password must be at least 6 characters'),
 ];
 

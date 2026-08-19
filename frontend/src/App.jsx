@@ -1,5 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";import { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 
 import Navbar from "./components/Navbar";
@@ -30,6 +29,8 @@ import AdminSettings from "./pages/admin/AdminSettings";
 
 function App() {
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith("/admin");
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1200);
@@ -54,6 +55,7 @@ function App() {
             <Route path="/book-now" element={<BookNowPage />} />
 
             {/* Admin - login is public, everything else requires a token */}
+            <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/gallery" element={<ProtectedRoute><AdminGallery /></ProtectedRoute>} />
@@ -70,9 +72,10 @@ function App() {
             <Route path="/services/cinematic" element={<Navigate to="/services" replace />} />
             <Route path="/services/prewedshoots" element={<Navigate to="/services" replace />} />
             <Route path="/services/droneCover" element={<Navigate to="/services" replace />} />
+            <Route path="*" element={<div className="min-h-screen bg-[#050505] px-6 py-32 text-center text-white"><h1 className="font-serif text-5xl">Page not found.</h1><p className="mt-4 text-sm text-white/45">The page you requested does not exist.</p></div>} />
           </Routes>
 
-          <Navbar />
+          {!isAdminRoute && <Navbar />}
         </>
       )}
     </div>

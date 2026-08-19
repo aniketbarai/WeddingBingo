@@ -1,33 +1,32 @@
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+import crypto from "crypto";
 
-const ensureDir = (dir) => {
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-};
-
-const storageDir = path.join(process.cwd(), 'uploads');
-ensureDir(storageDir);
+const storageDir = path.join(process.cwd(), "uploads");
+if (!fs.existsSync(storageDir)) fs.mkdirSync(storageDir, { recursive: true });
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, storageDir);
-  },
-  filename: (req, file, cb) => {
+  destination: (_req, _file, cb) => cb(null, storageDir),
+  filename: (_req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
-    const name = `file_${Date.now()}_${Math.random().toString(16).slice(2)}${ext}`;
-    cb(null, name);
+    cb(null, `${crypto.randomBytes(18).toString("hex")}${ext}`);
   },
 });
+
+const allowed = new Map([
+  ["image/jpeg", [".jpg", ".jpeg"]],
+  ["image/png", [".png"]],
+  ["image/webp", [".webp"]],
+  ["image/gif", [".gif"]],
+]);
 
 export const upload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
-  fileFilter: (req, file, cb) => {
-    const allowed = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+  limits: { fileSize: 10 * 1024 * 1024, files: 1 },
+  fileFilter: (_req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
-    if (!allowed.includes(ext)) return cb(new Error('Invalid file type'));
-    return cb(null, true);
+    if (!allowed.has(file.mimetype) || !allowed.get(file.mimetype).includes(ext)) return cb(new Error("Only JPEG, PNG, WebP, or GIF images are allowed"));
+    cb(null, true);
   },
 });
-
