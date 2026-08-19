@@ -44,6 +44,8 @@ export default function Gallery() {
   }, [page, sortBy]);
 
   useEffect(() => {
+    // This effect synchronizes the component with the remote gallery API.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchImages();
   }, [fetchImages]);
 

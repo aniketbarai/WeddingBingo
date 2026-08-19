@@ -30,6 +30,8 @@ export default function AdminGallery() {
   }, []);
 
   useEffect(() => {
+    // This effect synchronizes the component with the protected gallery API.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadImages();
   }, [loadImages]);
 

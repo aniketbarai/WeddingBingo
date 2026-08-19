@@ -2,6 +2,36 @@ import Image from "../models/Image.js";
 import fs from "fs";
 import path from "path";
 
+export const incrementImageLikes = async (req, res) => {
+  try {
+    const image = await Image.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { likes: 1 } },
+      { new: true, projection: { likes: 1 } },
+    );
+    if (!image) return res.status(404).json({ success: false, message: "Image not found" });
+    return res.json({ success: true, newLikes: image.likes });
+  } catch (err) {
+    if (err?.name === "CastError") return res.status(400).json({ success: false, message: "Invalid image id" });
+    return res.status(500).json({ success: false, message: "Failed to like image" });
+  }
+};
+
+export const incrementImageClicks = async (req, res) => {
+  try {
+    const image = await Image.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { clicks: 1 } },
+      { new: true, projection: { clicks: 1 } },
+    );
+    if (!image) return res.status(404).json({ success: false, message: "Image not found" });
+    return res.json({ success: true, clicks: image.clicks });
+  } catch (err) {
+    if (err?.name === "CastError") return res.status(400).json({ success: false, message: "Invalid image id" });
+    return res.status(500).json({ success: false, message: "Failed to record image view" });
+  }
+};
+
 export const getImages = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
