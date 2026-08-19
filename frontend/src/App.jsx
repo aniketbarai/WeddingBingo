@@ -25,6 +25,7 @@ import AdminReviews from "./pages/admin/AdminReviews";
 import AdminBookings from "./pages/admin/AdminBookings";
 import AdminPackages from "./pages/admin/AdminPackages";
 import AdminInquiries from "./pages/admin/AdminInquiries";
+import AdminWeddings from "./pages/admin/AdminWeddings";
 import AdminSettings from "./pages/admin/AdminSettings";
 
 function App() {
@@ -56,6 +57,7 @@ function App() {
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/gallery" element={<ProtectedRoute><AdminGallery /></ProtectedRoute>} />
+            <Route path="/admin/weddings" element={<ProtectedRoute><AdminWeddings /></ProtectedRoute>} />
             <Route path="/admin/reviews" element={<ProtectedRoute><AdminReviews /></ProtectedRoute>} />
             <Route path="/admin/bookings" element={<ProtectedRoute><AdminBookings /></ProtectedRoute>} />
             <Route path="/admin/packages" element={<ProtectedRoute><AdminPackages /></ProtectedRoute>} />

@@ -1,24 +1,16 @@
-import bcrypt from 'bcryptjs';
-import Admin from '../models/Admin.js';
+import bcrypt from "bcryptjs";
+import Admin from "../models/Admin.js";
 
-/**
- * Seeds a single admin account from env.
- * Requires:
- * - ADMIN_EMAIL
- * - ADMIN_PASSWORD
- */
 export async function seedAdmin() {
-  const email = process.env.ADMIN_EMAIL;
+  const email = process.env.ADMIN_EMAIL?.toLowerCase().trim();
   const password = process.env.ADMIN_PASSWORD;
-  if (!email || !password) return;
-
-  const existing = await Admin.findOne({ email: email.toLowerCase().trim() });
+  if (!email || !password) {
+    console.warn("ADMIN_EMAIL and ADMIN_PASSWORD are required to seed the first admin.");
+    return;
+  }
+  const existing = await Admin.findOne({ email });
   if (existing) return;
-
-  const passwordHash = await bcrypt.hash(password, 10);
-  await Admin.create({
-    email: email.toLowerCase().trim(),
-    passwordHash,
-  });
+  const passwordHash = await bcrypt.hash(password, 12);
+  await Admin.create({ email, passwordHash, role: "super_admin", name: process.env.ADMIN_NAME || "WeddingBingo Owner", status: "active" });
+  console.log(`Seeded super admin: ${email}`);
 }
-
