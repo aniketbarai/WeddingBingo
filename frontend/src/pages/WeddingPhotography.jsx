@@ -7,6 +7,8 @@ import {
   ArrowRight,
   Check,
 } from "lucide-react";
+import { motion } from "framer-motion";
+
 
 const galleryImages = [
   "https://images.unsplash.com/photo-1519741497674-611481863552?w=1200&q=80",

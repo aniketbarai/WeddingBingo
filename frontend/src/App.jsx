@@ -8,13 +8,8 @@ import IntroLoader from "./pages/IntroLoader";
 
 // Public pages
 import Home from "./pages/Home";
-import AboutPage from "./pages/About";
-import ServicesPage from "./pages/Services";
-import PackagesPage from "./pages/Packages";
 import Gallery from "./pages/Gallery";
-import TestimonialsPage from "./pages/Testimonials";
 import ContactPage from "./pages/ContactPage";
-import BookNowPage from "./pages/BookNow";
 
 // Admin pages
 import AdminLogin from "./pages/admin/AdminLogin";
@@ -26,6 +21,18 @@ import AdminPackages from "./pages/admin/AdminPackages";
 import AdminInquiries from "./pages/admin/AdminInquiries";
 import AdminWeddings from "./pages/admin/AdminWeddings";
 import AdminSettings from "./pages/admin/AdminSettings";
+
+import AboutSection from "./components/AboutSection";
+import ServicesSection from "./components/ServicesSection";
+import PackageSection from "./components/PackageSection";
+import TestimonialSection from "./components/TestimonialSection";
+
+
+import WeddingPhotograpgy from "./pages/WeddingPhotography"
+import DroneCover from "./pages/DroneCover"
+import PreWeddingShoots from "./pages/PreWeddingShoots";
+import CinematicVideography from "./pages/CinematicVideography";
+
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -46,13 +53,12 @@ function App() {
           <Routes>
             {/* Public */}
             <Route path="/" element={<Home />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/services" element={<ServicesPage />} />
-            <Route path="/packages" element={<PackagesPage />} />
+            <Route path="/about" element={<AboutSection />} />
+            <Route path="/services" element={<ServicesSection />} />
+            <Route path="/packages" element={<PackageSection />} />
             <Route path="/gallery" element={<Gallery />} />
-            <Route path="/testimonials" element={<TestimonialsPage />} />
+            <Route path="/testimonials" element={<TestimonialSection />} />
             <Route path="/contact" element={<ContactPage />} />
-            <Route path="/book-now" element={<BookNowPage />} />
 
             {/* Admin - login is public, everything else requires a token */}
             <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
@@ -68,10 +74,10 @@ function App() {
 
             {/* Legacy service URLs redirect to the real services page instead of
                 silently re-rendering Home under a different path */}
-            <Route path="/services/weddingp" element={<Navigate to="/services" replace />} />
-            <Route path="/services/cinematic" element={<Navigate to="/services" replace />} />
-            <Route path="/services/prewedshoots" element={<Navigate to="/services" replace />} />
-            <Route path="/services/droneCover" element={<Navigate to="/services" replace />} />
+            <Route path="/services/weddingp" element={<WeddingPhotograpgy />} />
+            <Route path="/services/cinematic" element={<CinematicVideography />} />
+            <Route path="/services/prewedshoots" element={ <PreWeddingShoots />} />
+            <Route path="/services/droneCover" element={ <DroneCover />} />
             <Route path="*" element={<div className="min-h-screen bg-[#050505] px-6 py-32 text-center text-white"><h1 className="font-serif text-5xl">Page not found.</h1><p className="mt-4 text-sm text-white/45">The page you requested does not exist.</p></div>} />
           </Routes>
 

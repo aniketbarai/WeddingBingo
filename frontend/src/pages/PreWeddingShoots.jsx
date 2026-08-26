@@ -8,6 +8,8 @@ import {
   Check,
   Maximize2,
 } from "lucide-react";
+import { motion } from "framer-motion";
+
 
 const locations = [
   {
