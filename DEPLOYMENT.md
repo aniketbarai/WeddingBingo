@@ -44,7 +44,7 @@ After deployment, verify `https://<your-render-service>.onrender.com/health` ret
 
 ## 3. Deploy the frontend to Vercel
 
-Import the repository into Vercel. Keep the project root at the repository root because the included root `vercel.json` builds `frontend` and publishes `frontend/dist`. Alternatively, set the Vercel Root Directory to `frontend` and use the frontend `vercel.json`.
+Import the repository into Vercel. Keep the project root at the repository root because the included root `vercel.json` installs the `frontend` dependencies and publishes `frontend/dist`. The configuration intentionally uses `npm install` rather than `npm ci`, so deployment also works when a Git commit does not contain the nested frontend lockfile. Alternatively, set the Vercel Root Directory to `frontend` and use the frontend `vercel.json`.
 
 Set this Vercel environment variable for **Production**, **Preview**, and **Development** as appropriate:
 

@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm ci --prefix frontend && npm run build --prefix frontend",
+  "buildCommand": "npm install --prefix frontend --no-audit --no-fund && npm run build --prefix frontend",
   "outputDirectory": "frontend/dist",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
   "headers": [{
