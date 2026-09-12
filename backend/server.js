@@ -7,10 +7,12 @@ const PORT = Number(process.env.PORT || 5000);
 
 // Fail fast on missing required config instead of booting into a broken
 // state (e.g. every admin session silently unverifiable without JWT_SECRET).
-const REQUIRED_ENV = ["MONGO_URI", "JWT_SECRET", "ADMIN_EMAIL", "ADMIN_PASSWORD", "FRONTEND_URL"];
+// MONGODB_URI is the documented name; keep MONGO_URI for existing deployments.
+const REQUIRED_ENV = ["JWT_SECRET", "ADMIN_EMAIL", "ADMIN_PASSWORD", "FRONTEND_URL"];
 const RECOMMENDED_ENV = ["IMAGEKIT_PUBLIC_KEY", "IMAGEKIT_PRIVATE_KEY", "IMAGEKIT_URL_ENDPOINT", "EMAIL_USER", "EMAIL_PASS"];
 
 const missingRequired = REQUIRED_ENV.filter((key) => !process.env[key]);
+if (!process.env.MONGODB_URI && !process.env.MONGO_URI) missingRequired.unshift("MONGODB_URI (or MONGO_URI)");
 if (missingRequired.length) {
   console.error(`Missing required environment variables: ${missingRequired.join(", ")}. Copy .env.example to .env and fill them in.`);
   process.exit(1);

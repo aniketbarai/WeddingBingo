@@ -7,6 +7,8 @@ import validator from "validator";
 export const resources = { weddings: Wedding, inquiries: Inquiry, bookings: Booking, testimonials: Testimonial, packages: Package };
 export const permissionNames = { weddings: "portfolio", inquiries: "inquiries", bookings: "bookings", testimonials: "testimonials", packages: "packages" };
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 // Admin forms send "" for any untouched Number/Date field (e.g. an empty
 // Rating input). Mongoose can't cast "" to a Number or Date and throws a
 // CastError, so strip those out here and let the schema default apply
@@ -16,8 +18,24 @@ const sanitizeForSchema = (Model, body) => {
   const paths = Model.schema.paths;
   for (const key of Object.keys(clean)) {
     const path = paths[key];
-    if (path && clean[key] === "" && ["Number", "Date"].includes(path.instance)) {
+    if (!path) {
       delete clean[key];
+      continue;
+    }
+    if (clean[key] === "" && ["Number", "Date"].includes(path.instance)) {
+      delete clean[key];
+      continue;
+    }
+    if (clean[key] === "" && path.enumValues?.length) {
+      // Empty select values should use the schema default rather than fail
+      // enum validation (notably Package.category and Booking.status).
+      delete clean[key];
+      continue;
+    }
+    if (path.enumValues?.length && typeof clean[key] === "string") {
+      const normalized = clean[key].trim().toLowerCase();
+      const matchingValue = path.enumValues.find((value) => value.toLowerCase() === normalized);
+      if (matchingValue) clean[key] = matchingValue;
     }
   }
   return clean;
@@ -30,7 +48,7 @@ export const listResource = async (req, res) => {
   const query = {};
   if (req.query.status) query.status = req.query.status;
   if (req.query.search) {
-    const term = String(req.query.search).slice(0, 80);
+    const term = escapeRegex(String(req.query.search).slice(0, 80));
     query.$or = [{ title: { $regex: term, $options: "i" } }, { coupleNames: { $regex: term, $options: "i" } }, { coupleName: { $regex: term, $options: "i" } }, { name: { $regex: term, $options: "i" } }, { email: { $regex: term, $options: "i" } }];
   }
   const [items, total] = await Promise.all([Model.find(query).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(), Model.countDocuments(query)]);

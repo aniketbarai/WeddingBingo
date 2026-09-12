@@ -72,6 +72,7 @@ function App() {
             <Route path="/admin/gallery" element={<ProtectedRoute><AdminGallery /></ProtectedRoute>} />
             <Route path="/admin/weddings" element={<ProtectedRoute><AdminWeddings /></ProtectedRoute>} />
             <Route path="/admin/reviews" element={<ProtectedRoute><AdminReviews /></ProtectedRoute>} />
+            <Route path="/admin/testimonials" element={<Navigate to="/admin/reviews" replace />} />
             <Route path="/admin/bookings" element={<ProtectedRoute><AdminBookings /></ProtectedRoute>} />
             <Route path="/admin/packages" element={<ProtectedRoute><AdminPackages /></ProtectedRoute>} />
             <Route path="/admin/inquiries" element={<ProtectedRoute><AdminInquiries /></ProtectedRoute>} />
@@ -94,4 +95,3 @@ function App() {
 }
 
 export default App;
-

@@ -5,12 +5,20 @@ import { resources, permissionNames, listResource, createResource, updateResourc
 const router = express.Router();
 router.use(requireAdminAuth);
 
+// These routes are registered with literal paths (e.g. /packages), so
+// req.params.resource is not populated automatically. Set it explicitly for
+// the shared CRUD handlers before they resolve the model from `resources`.
+const withResource = (resource, handler) => (req, res, next) => {
+  req.params.resource = resource;
+  return handler(req, res, next);
+};
+
 Object.keys(resources).forEach((resource) => {
   const permission = permissionNames[resource];
-  router.get(`/${resource}`, requirePermission(`${permission}.view`), listResource);
-  router.post(`/${resource}`, requirePermission(`${permission}.create`), createResource);
-  router.patch(`/${resource}/:id`, requirePermission(`${permission}.update`), updateResource);
-  router.delete(`/${resource}/:id`, requirePermission(`${permission}.delete`), deleteResource);
+  router.get(`/${resource}`, requirePermission(`${permission}.view`), withResource(resource, listResource));
+  router.post(`/${resource}`, requirePermission(`${permission}.create`), withResource(resource, createResource));
+  router.patch(`/${resource}/:id`, requirePermission(`${permission}.update`), withResource(resource, updateResource));
+  router.delete(`/${resource}/:id`, requirePermission(`${permission}.delete`), withResource(resource, deleteResource));
 });
 
 router.post("/inquiries/:id/notes", requirePermission("inquiries.update"), addInquiryNote);
