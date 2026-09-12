@@ -1,9 +1,13 @@
 import express from "express";
 import { requireAdminAuth, requirePermission } from "../middlewares/authJwt.js";
 import { resources, permissionNames, listResource, createResource, updateResource, deleteResource, addInquiryNote, updateInquiryStatus } from "../controllers/mvpController.js";
+import { adminUploadServiceImage } from "../controllers/imageController.js";
+import { upload } from "../middlewares/upload.js";
 
 const router = express.Router();
 router.use(requireAdminAuth);
+
+router.post("/services/upload-image", requirePermission("services.create"), upload.single("image"), adminUploadServiceImage);
 
 // These routes are registered with literal paths (e.g. /packages), so
 // req.params.resource is not populated automatically. Set it explicitly for

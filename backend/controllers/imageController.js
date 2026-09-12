@@ -89,6 +89,17 @@ export const adminUploadImage = async (req, res) => {
   }
 };
 
+export const adminUploadServiceImage = async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, message: "No image file provided" });
+    if (!isImageKitConfigured()) return res.status(503).json({ success: false, message: "Image hosting is not configured." });
+    const uploadResult = await imagekit.upload({ file: req.file.buffer.toString("base64"), fileName: req.file.originalname, folder: "/weddingbingo/services", useUniqueFileName: true });
+    return res.status(201).json({ success: true, image: { url: uploadResult.url, fileId: uploadResult.fileId } });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err?.message || "Failed to upload service image" });
+  }
+};
+
 // Admin: list all images (no pagination needed for the management view).
 export const adminListImages = async (req, res) => {
   try {

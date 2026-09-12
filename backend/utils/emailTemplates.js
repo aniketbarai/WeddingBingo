@@ -34,7 +34,7 @@ export const clientHTML = (name, message) => `
   </div>
 `;
 
-export const adminHTML = (name, email, date, message) => {
+export const adminHTML = (name, email, phone, date, message) => {
   const safeMessage = message
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
@@ -65,6 +65,10 @@ export const adminHTML = (name, email, date, message) => {
 
         <p style="color:#ccc; font-size:14px;">
           <strong style="color:#C6A75E;">Email:</strong> ${email}
+        </p>
+
+        <p style="color:#ccc; font-size:14px;">
+          <strong style="color:#C6A75E;">Phone:</strong> ${phone}
         </p>
 
         <p style="color:#ccc; font-size:14px;">

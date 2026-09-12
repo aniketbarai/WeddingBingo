@@ -1,13 +1,15 @@
 import Wedding from "../models/Wedding.js";
 import Inquiry from "../models/Inquiry.js";
 import { Booking, Testimonial, Package } from "../models/MvpContent.js";
+import Service from "../models/Service.js";
 import { recordAudit } from "../utils/audit.js";
 import validator from "validator";
 
-export const resources = { weddings: Wedding, inquiries: Inquiry, bookings: Booking, testimonials: Testimonial, packages: Package };
-export const permissionNames = { weddings: "portfolio", inquiries: "inquiries", bookings: "bookings", testimonials: "testimonials", packages: "packages" };
+export const resources = { weddings: Wedding, inquiries: Inquiry, bookings: Booking, testimonials: Testimonial, packages: Package, services: Service };
+export const permissionNames = { weddings: "portfolio", inquiries: "inquiries", bookings: "bookings", testimonials: "testimonials", packages: "packages", services: "services" };
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const slugify = (value) => String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
 // Admin forms send "" for any untouched Number/Date field (e.g. an empty
 // Rating input). Mongoose can't cast "" to a Number or Date and throws a
@@ -19,6 +21,7 @@ const sanitizeForSchema = (Model, body) => {
   for (const key of Object.keys(clean)) {
     const path = paths[key];
     if (!path) {
+      if (Model.modelName === "Service" && key === "pageLayout") continue;
       delete clean[key];
       continue;
     }
@@ -49,7 +52,7 @@ export const listResource = async (req, res) => {
   if (req.query.status) query.status = req.query.status;
   if (req.query.search) {
     const term = escapeRegex(String(req.query.search).slice(0, 80));
-    query.$or = [{ title: { $regex: term, $options: "i" } }, { coupleNames: { $regex: term, $options: "i" } }, { coupleName: { $regex: term, $options: "i" } }, { name: { $regex: term, $options: "i" } }, { email: { $regex: term, $options: "i" } }];
+    query.$or = [{ title: { $regex: term, $options: "i" } }, { coupleNames: { $regex: term, $options: "i" } }, { coupleName: { $regex: term, $options: "i" } }, { name: { $regex: term, $options: "i" } }, { email: { $regex: term, $options: "i" } }, { slug: { $regex: term, $options: "i" } }];
   }
   const [items, total] = await Promise.all([Model.find(query).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(), Model.countDocuments(query)]);
   res.json({ success: true, items, total, page, pages: Math.max(Math.ceil(total / limit), 1) });
@@ -57,7 +60,9 @@ export const listResource = async (req, res) => {
 
 export const createResource = async (req, res) => {
   const Model = resources[req.params.resource];
-  const item = await Model.create(sanitizeForSchema(Model, req.body));
+  const payload = sanitizeForSchema(Model, req.body);
+  if (req.params.resource === "services") payload.slug = slugify(payload.title);
+  const item = await Model.create(payload);
   await recordAudit(req, "crud.create", req.params.resource, item._id);
   res.status(201).json({ success: true, item });
 };
@@ -66,7 +71,9 @@ export const updateResource = async (req, res) => {
   const Model = resources[req.params.resource];
   const previous = await Model.findById(req.params.id).lean();
   if (!previous) return res.status(404).json({ success: false, message: "Record not found" });
-  const item = await Model.findByIdAndUpdate(req.params.id, { $set: sanitizeForSchema(Model, req.body) }, { new: true, runValidators: true });
+  const payload = sanitizeForSchema(Model, req.body);
+  if (req.params.resource === "services" && payload.title) payload.slug = slugify(payload.title);
+  const item = await Model.findByIdAndUpdate(req.params.id, { $set: payload }, { new: true, runValidators: true });
   await recordAudit(req, "crud.update", req.params.resource, item._id, { changedFields: Object.keys(req.body) });
   res.json({ success: true, item });
 };
