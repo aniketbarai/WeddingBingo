@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 // eslint-disable-next-line no-unused-vars
 import { AnimatePresence, motion, useScroll, useSpring } from "framer-motion";
 import { Link, NavLink } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ArrowUpRight } from "lucide-react";
 import { useNavbarTheme } from "../hooks/useNavbarTheme";
 import { NAV_LINKS } from "../config/navigation";
 
@@ -32,7 +32,7 @@ const Navbar = () => {
         logo: "text-[#C6A75E]",
         logoRest: "text-white",
         navText: "text-white",
-        panel: "bg-[#050505]/95",
+        panel: "bg-[#09090b]",
         underline: "bg-[#C6A75E]",
       };
     }
@@ -48,7 +48,7 @@ const Navbar = () => {
         logo: "text-[#9b7b36]",
         logoRest: "text-black",
         navText: "text-black",
-        panel: solid ? "bg-white/72" : "bg-white/0",
+        panel: solid ? "bg-white/80" : "bg-white/0",
         underline: "bg-black",
       };
     }
@@ -61,7 +61,7 @@ const Navbar = () => {
       logo: "text-[#C6A75E]",
       logoRest: "text-white",
       navText: "text-white",
-      panel: solid ? "bg-black/[0.46]" : "bg-transparent",
+      panel: solid ? "bg-black/80" : "bg-transparent",
       underline: "bg-[#C6A75E]",
     };
   }, [isLight, isOpen, solid]);
@@ -116,6 +116,7 @@ const Navbar = () => {
           </span>
         </Link>
 
+        {/* Desktop Navigation */}
         <ul className={`hidden items-center gap-7 text-[12px] font-semibold uppercase tracking-[0.22em] ${colors.navText} lg:flex`}>
           {navLinks.map((item) => (
             <motion.li key={item.link} whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 360, damping: 24 }}>
@@ -123,21 +124,29 @@ const Navbar = () => {
                 to={item.link}
                 end={item.link === "/"}
                 className={({ isActive }) =>
-                  `group relative inline-flex py-2.5 transition-colors duration-300 ${focusRing} ${
-                    isActive ? colors.accent : "hover:opacity-70"
+                  `group relative inline-flex items-center py-2.5 transition-colors duration-300 ${focusRing} ${
+                    isActive ? colors.accent : "hover:opacity-80"
                   }`
                 }
               >
                 {({ isActive }) => (
                   <>
-                    <span>{item.name}</span>
-                    <motion.span
-                      layoutId={isActive ? "active-nav-underline" : undefined}
-                      className={`absolute bottom-1 left-0 h-px ${colors.underline}`}
-                      initial={false}
-                      animate={{ width: isActive ? "100%" : "0%" }}
-                      whileHover={{ width: "100%" }}
-                      transition={{ duration: 0.28, ease: "easeOut" }}
+                    <span className="flex items-center gap-1">
+                      {item.name}
+                      {/* Hide arrow completely when link is active */}
+                      {!isActive && (
+                        <ArrowUpRight
+                          size={13}
+                          className="-translate-x-1 translate-y-1 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:translate-y-0 group-hover:opacity-100"
+                        />
+                      )}
+                    </span>
+
+                    {/* Underline on Hover & Active indicator */}
+                    <span
+                      className={`absolute bottom-1 left-0 h-px w-full origin-left transition-transform duration-300 ease-out ${colors.underline} ${
+                        isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                      }`}
                     />
                   </>
                 )}
@@ -146,6 +155,7 @@ const Navbar = () => {
           ))}
         </ul>
 
+        {/* Desktop Call To Action */}
         <div className="hidden items-center lg:flex">
           <Link
             to="/contact"
@@ -158,6 +168,7 @@ const Navbar = () => {
           </Link>
         </div>
 
+        {/* Mobile/Tablet Toggle Button */}
         <button
           type="button"
           aria-label={isOpen ? "Close menu" : "Open menu"}
@@ -170,43 +181,45 @@ const Navbar = () => {
         </button>
       </div>
 
+      {/* Scroll Progress Bar */}
       <motion.div
         aria-hidden="true"
         className="h-px origin-left bg-gradient-to-r from-transparent via-[#C6A75E] to-transparent"
         style={{ scaleX: progressScale }}
       />
 
+      {/* Mobile & Tablet Fullscreen Menu Drawer */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
             id="mobile-navigation"
-            initial={{ opacity: 0, y: -12 }}
+            initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.28, ease: "easeOut" }}
-            className="fixed inset-x-0 top-16 z-[101] min-h-[calc(100dvh-4rem)] border-t border-white/10 bg-[#050505]/96 px-6 py-8 text-white shadow-2xl backdrop-blur-2xl sm:top-[4.5rem] sm:min-h-[calc(100dvh-4.5rem)] lg:hidden"
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="fixed inset-x-0 top-[4rem] z-[101] h-[calc(100dvh-4rem)] overflow-y-auto bg-[#09090b] px-6 py-8 text-white shadow-2xl sm:top-[4.5rem] sm:h-[calc(100dvh-4.5rem)] sm:px-10 lg:hidden"
           >
-            <div className="mx-auto flex max-w-md flex-col">
-              <div className="space-y-1">
+            <div className="mx-auto flex h-full max-w-md flex-col justify-between pb-10">
+              <div className="space-y-2">
                 {navLinks.map((item, index) => (
                   <motion.div
                     key={item.link}
-                    initial={{ opacity: 0, y: 18 }}
+                    initial={{ opacity: 0, y: 14 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.045, duration: 0.32 }}
+                    transition={{ delay: index * 0.04 + 0.05, duration: 0.28 }}
                   >
                     <NavLink
                       to={item.link}
                       end={item.link === "/"}
                       onClick={() => setIsOpen(false)}
                       className={({ isActive }) =>
-                        `flex items-center justify-between border-b border-white/[0.08] py-5 font-serif text-4xl italic transition-colors duration-300 sm:text-5xl ${focusRing} ${
-                          isActive ? "text-[#C6A75E]" : "text-white hover:text-[#C6A75E]"
+                        `flex items-center justify-between border-b border-white/10 py-4 font-serif text-3xl italic transition-colors duration-300 sm:py-5 sm:text-4xl ${focusRing} ${
+                          isActive ? "text-[#C6A75E]" : "text-white/90 hover:text-[#C6A75E]"
                         }`
                       }
                     >
                       {item.name}
-                      <span className="text-xs not-italic tracking-[0.35em] text-white/35">
+                      <span className="text-xs not-italic tracking-[0.35em] text-white/40">
                         {String(index + 1).padStart(2, "0")}
                       </span>
                     </NavLink>
@@ -215,15 +228,15 @@ const Navbar = () => {
               </div>
 
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.34 }}
-                className="mt-10"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: navLinks.length * 0.04 + 0.1, duration: 0.3 }}
+                className="mt-8 pt-4"
               >
                 <Link
                   to="/contact"
                   onClick={() => setIsOpen(false)}
-                  className={`inline-flex w-full items-center justify-center rounded-full border border-[#C6A75E]/70 px-8 py-4 text-xs font-bold uppercase tracking-[0.3em] text-[#C6A75E] transition-all duration-500 hover:bg-[#C6A75E] hover:text-black ${focusRing}`}
+                  className={`inline-flex w-full items-center justify-center rounded-full border border-[#C6A75E] bg-[#C6A75E]/10 py-3.5 text-xs font-bold uppercase tracking-[0.28em] text-[#C6A75E] transition-all duration-300 hover:bg-[#C6A75E] hover:text-black ${focusRing}`}
                 >
                   Inquiry Now
                 </Link>
