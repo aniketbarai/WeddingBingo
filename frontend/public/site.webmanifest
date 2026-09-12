@@ -1,0 +1,9 @@
+{
+  "name": "Wedding Bingo",
+  "short_name": "Wedding Bingo",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "description": "Cinematic wedding stories and celebration experiences."
+}

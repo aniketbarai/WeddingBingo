@@ -18,13 +18,18 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
 
-const allowedOrigins = (process.env.FRONTEND_URL || "http://localhost:5173").split(",").map((value) => value.trim());
-app.use(cors({ origin: (origin, callback) => (!origin || allowedOrigins.includes(origin) ? callback(null, true) : callback(new Error("Origin not allowed"))), credentials: true }));
+app.set("trust proxy", 1);
+const allowedOrigins = (process.env.CORS_ORIGINS || process.env.FRONTEND_URL || "http://localhost:5173").split(",").map((value) => value.trim().replace(/\/$/, "")).filter(Boolean);
+app.use(cors({ origin: (origin, callback) => {
+  if (!origin || allowedOrigins.includes(origin.replace(/\/$/, ""))) return callback(null, true);
+  return callback(new Error("Origin not allowed"));
+}, credentials: true, methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"], allowedHeaders: ["Content-Type", "Authorization"] }));
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 app.use(sanitizeInput);
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.get("/health", (req, res) => res.status(200).json({ status: "ok", service: "weddingbingo-api", timestamp: new Date().toISOString() }));
 
 const publicLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 120, standardHeaders: true, legacyHeaders: false });
 app.use("/api", publicLimiter);
