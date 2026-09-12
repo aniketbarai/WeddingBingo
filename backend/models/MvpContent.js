@@ -30,6 +30,8 @@ const packageSchema = new mongoose.Schema({
   title: { type: String, required: true, trim: true, maxlength: 160 },
   description: { type: String, maxlength: 5000 },
   price: { type: String, trim: true, maxlength: 80 },
+  category: { type: String, enum: ["photo", "video", "complete"], default: "photo", index: true },
+  popular: { type: Boolean, default: false },
   coverImage: String,
   features: [{ type: String, trim: true, maxlength: 240 }],
   active: { type: Boolean, default: true, index: true },

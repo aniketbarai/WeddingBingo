@@ -1,52 +1,10 @@
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence, useInView } from "framer-motion";
+import { api } from "../api/client.js";
 
-const packagesData = {
-  photo: [
-    { 
-      title: "The Essential Collection", 
-      price: 75000, 
-      features: ["8 Hours Coverage", "300+ Artistically Edited Photos", "Online Gallery for 1 Year", "Physical Photo Box"], 
-      popular: false 
-    },
-    { 
-      title: "The Signature Experience", 
-      price: 125000, 
-      features: ["Full Day Coverage", "2 Senior Photographers", "600+ Edited Photos", "Luxury Flush Mount Album", "Pre-Wedding Session"], 
-      popular: true 
-    },
-    { 
-      title: "The Grand Archive", 
-      price: 185000, 
-      features: ["Full Team Coverage", "1000+ Master Photos", "Cinematic Portraits", "4K Drone Aerials", "Handcrafted Heirloom Album"], 
-      popular: false 
-    },
-  ],
-  video: [
-    { 
-      title: "Cinematic Film", 
-      price: 95000, 
-      features: ["Single Cinematographer", "4K Video Production", "3-Min Teaser Film", "Full Highlight Reel"], 
-      popular: false 
-    },
-    { 
-      title: "Luxury Cinema", 
-      price: 165000, 
-      features: ["2 Cinematographers", "Documentary Wedding Film", "Aerial Drone Shots", "Instagram Cinematic Reel", "Same-Day Edit Teaser"], 
-      popular: true 
-    },
-  ],
-  complete: [
-    { 
-      title: "The Masterpiece Collection", 
-      price: 225000, 
-      features: ["Full Photo + Video Team", "Advanced Drone Coverage", "Signature Luxury Album", "Complete Cinematic Film", "Personalized Keepsake Box", "Same-Day Photo Highlights"], 
-      popular: true 
-    },
-  ],
-};
-
+// Upsell add-ons — not tied to a booking or a specific package, so these
+// stay as studio-wide pricing copy rather than a database record.
 const addons = [
   { item: "Extra Photographer", price: "₹15,000" },
   { item: "Pre-Wedding Film", price: "₹25,000" },
@@ -54,27 +12,38 @@ const addons = [
   { item: "Fine-Art Print Box", price: "₹12,000" }
 ];
 
+const TABS = ["photo", "video", "complete"];
+
 export default function PackagesSection() {
   const [activeTab, setActiveTab] = useState("photo");
+  const [packages, setPackages] = useState([]);
+  const [status, setStatus] = useState("loading"); // loading | ready | error
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
 
-  // SMOOTH SCROLL FUNCTION
+  useEffect(() => {
+    let active = true;
+    api.get("/api/public/packages")
+      .then(({ data }) => { if (active) { setPackages(data.items || []); setStatus("ready"); } })
+      .catch(() => { if (active) setStatus("error"); });
+    return () => { active = false; };
+  }, []);
+
   const scrollToContact = () => {
     const contactSection = document.getElementById("contact");
-    if (contactSection) {
-      contactSection.scrollIntoView({ behavior: "smooth" });
-    }
+    if (contactSection) contactSection.scrollIntoView({ behavior: "smooth" });
   };
+
+  const visiblePackages = packages.filter((pkg) => (pkg.category || "photo") === activeTab);
 
   return (
     <section ref={sectionRef} data-navbar-theme="dark" className="relative py-32 px-6 bg-[#050505] text-white overflow-hidden min-h-screen flex flex-col justify-center">
-      
+
       {/* BACKGROUND GLOW */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full max-w-4xl bg-[#C6A75E]/5 blur-[160px] rounded-full pointer-events-none" />
 
       <div className="max-w-7xl mx-auto w-full relative z-10">
-        
+
         {/* HEADER */}
         <div className="text-center mb-20">
           <motion.span
@@ -92,7 +61,7 @@ export default function PackagesSection() {
           >
             Bespoke <span className="italic font-serif text-[#C6A75E]">Collections.</span>
           </motion.h2>
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0 }}
             animate={isInView ? { opacity: 1 } : {}}
             className="text-gray-500 max-w-lg mx-auto font-light text-sm tracking-wide leading-relaxed"
@@ -104,7 +73,7 @@ export default function PackagesSection() {
         {/* TAB TOGGLE */}
         <div className="flex justify-center mb-20">
           <div className="inline-flex bg-white/5 backdrop-blur-xl p-1.5 rounded-full border border-white/10 relative">
-            {["photo", "video", "complete"].map((type) => (
+            {TABS.map((type) => (
               <button
                 key={type}
                 onClick={() => setActiveTab(type)}
@@ -126,57 +95,75 @@ export default function PackagesSection() {
         </div>
 
         {/* PACKAGE CARDS */}
-        <div className="flex flex-wrap justify-center gap-8 lg:gap-10">
-          <AnimatePresence mode="sync">
-            {packagesData[activeTab].map((pkg, index) => (
-              <motion.div
-                key={activeTab + index}
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className={`relative w-full md:w-[calc(50%-2rem)] lg:w-[calc(33.33%-2.5rem)] max-w-sm p-10 rounded-[2.5rem] border transition-all duration-700 group ${
-                  pkg.popular 
-                    ? "border-[#C6A75E]/40 bg-gradient-to-b from-[#111] to-[#050505] shadow-[0_20px_50px_rgba(198,167,94,0.1)]" 
-                    : "border-white/5 bg-white/[0.02] hover:border-white/20"
-                }`}
-              >
-                {pkg.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#C6A75E] text-black text-[9px] font-black px-4 py-1.5 rounded-full tracking-widest uppercase shadow-lg">
-                    Studio Signature
-                  </div>
-                )}
-
-                <h3 className="text-xl font-light tracking-tight mb-2 group-hover:text-[#C6A75E] transition-colors">{pkg.title}</h3>
-                <div className="flex items-baseline gap-1 mb-8">
-                  <span className="text-3xl font-light text-[#C6A75E]">₹{pkg.price.toLocaleString()}</span>
-                  <span className="text-[10px] text-gray-600 uppercase tracking-tighter">Invest</span>
-                </div>
-
-                <div className="h-[1px] w-full bg-gradient-to-r from-[#C6A75E]/40 to-transparent mb-8" />
-
-                <ul className="space-y-4 mb-12 min-h-[180px]">
-                  {pkg.features.map((feature, i) => (
-                    <li key={i} className="flex items-start gap-3 text-xs font-light text-gray-400">
-                      <span className="text-[#C6A75E] mt-1.5 w-1 h-1 rounded-full bg-[#C6A75E]" />
-                      <span className="hover:text-white transition-colors">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <button 
-                  onClick={scrollToContact}
-                  className="w-full py-4 rounded-2xl bg-transparent border border-[#C6A75E]/30 text-[#C6A75E] text-[10px] font-bold uppercase tracking-[0.3em] hover:bg-[#C6A75E] hover:text-black transition-all duration-500 active:scale-95"
-                >
-                  Secure Your Date
-                </button>
-              </motion.div>
+        {status === "loading" && (
+          <div className="flex flex-wrap justify-center gap-8 lg:gap-10">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="w-full md:w-[calc(50%-2rem)] lg:w-[calc(33.33%-2.5rem)] max-w-sm h-[420px] rounded-[2.5rem] border border-white/5 bg-white/[0.02] animate-pulse" />
             ))}
-          </AnimatePresence>
-        </div>
+          </div>
+        )}
+
+        {status === "error" && (
+          <p className="text-center text-sm text-white/40">Packages could not be loaded right now. Please check back shortly.</p>
+        )}
+
+        {status === "ready" && visiblePackages.length === 0 && (
+          <p className="text-center text-sm text-white/40">No {activeTab} packages published yet — check back soon.</p>
+        )}
+
+        {status === "ready" && visiblePackages.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-8 lg:gap-10">
+            <AnimatePresence mode="sync">
+              {visiblePackages.map((pkg, index) => (
+                <motion.div
+                  key={pkg._id || activeTab + index}
+                  initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className={`relative w-full md:w-[calc(50%-2rem)] lg:w-[calc(33.33%-2.5rem)] max-w-sm p-10 rounded-[2.5rem] border transition-all duration-700 group ${
+                    pkg.popular
+                      ? "border-[#C6A75E]/40 bg-gradient-to-b from-[#111] to-[#050505] shadow-[0_20px_50px_rgba(198,167,94,0.1)]"
+                      : "border-white/5 bg-white/[0.02] hover:border-white/20"
+                  }`}
+                >
+                  {pkg.popular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#C6A75E] text-black text-[9px] font-black px-4 py-1.5 rounded-full tracking-widest uppercase shadow-lg">
+                      Studio Signature
+                    </div>
+                  )}
+
+                  <h3 className="text-xl font-light tracking-tight mb-2 group-hover:text-[#C6A75E] transition-colors">{pkg.title}</h3>
+                  <div className="flex items-baseline gap-1 mb-8">
+                    <span className="text-3xl font-light text-[#C6A75E]">{pkg.price}</span>
+                    <span className="text-[10px] text-gray-600 uppercase tracking-tighter">Invest</span>
+                  </div>
+
+                  <div className="h-[1px] w-full bg-gradient-to-r from-[#C6A75E]/40 to-transparent mb-8" />
+
+                  <ul className="space-y-4 mb-12 min-h-[180px]">
+                    {(pkg.features || []).map((feature, i) => (
+                      <li key={i} className="flex items-start gap-3 text-xs font-light text-gray-400">
+                        <span className="text-[#C6A75E] mt-1.5 w-1 h-1 rounded-full bg-[#C6A75E]" />
+                        <span className="hover:text-white transition-colors">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <button
+                    onClick={scrollToContact}
+                    className="w-full py-4 rounded-2xl bg-transparent border border-[#C6A75E]/30 text-[#C6A75E] text-[10px] font-bold uppercase tracking-[0.3em] hover:bg-[#C6A75E] hover:text-black transition-all duration-500 active:scale-95"
+                  >
+                    Secure Your Date
+                  </button>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
 
         {/* CUSTOMIZE SECTION */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
@@ -199,7 +186,7 @@ export default function PackagesSection() {
         {/* SCANNER LINE */}
         <div className="mt-28 text-center">
             <div className="h-[1px] max-w-xs mx-auto bg-white/10 relative overflow-hidden">
-                <motion.div 
+                <motion.div
                     initial={{ x: "-100%" }}
                     animate={isInView ? { x: "100%" } : {}}
                     transition={{ repeat: Infinity, duration: 4, ease: "linear" }}

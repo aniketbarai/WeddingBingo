@@ -1,21 +1,17 @@
-import nodemailer from 'nodemailer';
+import transporter from "../config/mailer.js";
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
-const resetHTML = (resetToken) => `
+const resetHTML = (resetToken) => {
+  const frontendUrl = (process.env.FRONTEND_URL || "").split(",")[0]?.trim();
+  const resetLink = frontendUrl ? `${frontendUrl}/admin/reset-password/${resetToken}` : null;
+  return `
   <div style="font-family:Arial;background:#0a0a0a;color:#fff;padding:24px">
     <h2 style="color:#C6A75E">Reset your password</h2>
-    <p>Use the token below to reset your admin password.</p>
+    ${resetLink ? `<p><a href="${resetLink}" style="color:#C6A75E">Click here to reset your password</a></p><p>Or use the token below:</p>` : `<p>Use the token below to reset your admin password.</p>`}
     <div style="padding:12px 16px;border:1px solid #C6A75E;display:inline-block;letter-spacing:2px;font-size:14px">${resetToken}</div>
     <p style="margin-top:18px;color:#aaa;font-size:12px">This token expires in 15 minutes.</p>
   </div>
 `;
+};
 
 export const sendAdminForgotEmail = async ({ email, resetToken }) => {
   await transporter.sendMail({

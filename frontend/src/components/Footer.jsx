@@ -1,4 +1,4 @@
-import { Instagram, Facebook, Mail, MapPin, ArrowUpRight } from "lucide-react";
+import { Instagram, Facebook, Mail, MapPin, ArrowUpRight, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 // eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
@@ -104,18 +104,27 @@ export default function Footer() {
           
           <p className="text-[10px] text-gray-600 uppercase tracking-widest text-center md:text-left">
             © {currentYear} Wedding Bingo • Crafted by <span className="text-gray-400"><a href="https://abarai.netlify.app/">Aniket Barai</a></span>
-            {" "}• <Link to="/admin/login" className="hover:text-[#C6A75E] transition-colors">Admin</Link>
           </p>
 
-          <button 
-            onClick={scrollToTop}
-            className="group flex items-center gap-3 text-[10px] text-gray-500 hover:text-[#C6A75E] transition-colors uppercase tracking-[0.3em] font-bold"
-          >
-            Back to Top
-            <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center group-hover:border-[#C6A75E] transition-all">
-              <ArrowUpRight size={14} className="-rotate-45" />
-            </div>
-          </button>
+          <div className="flex items-center gap-6">
+            <Link
+              to="/admin/login"
+              className="group flex items-center gap-2 text-[10px] text-gray-500 hover:text-[#C6A75E] transition-colors uppercase tracking-[0.3em] font-bold border border-white/10 hover:border-[#C6A75E] rounded-full px-4 py-2"
+            >
+              <ShieldCheck size={14} />
+              Admin Portal
+            </Link>
+
+            <button 
+              onClick={scrollToTop}
+              className="group flex items-center gap-3 text-[10px] text-gray-500 hover:text-[#C6A75E] transition-colors uppercase tracking-[0.3em] font-bold"
+            >
+              Back to Top
+              <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center group-hover:border-[#C6A75E] transition-all">
+                <ArrowUpRight size={14} className="-rotate-45" />
+              </div>
+            </button>
+          </div>
 
         </div>
 

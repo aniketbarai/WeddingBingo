@@ -7,6 +7,22 @@ import validator from "validator";
 export const resources = { weddings: Wedding, inquiries: Inquiry, bookings: Booking, testimonials: Testimonial, packages: Package };
 export const permissionNames = { weddings: "portfolio", inquiries: "inquiries", bookings: "bookings", testimonials: "testimonials", packages: "packages" };
 
+// Admin forms send "" for any untouched Number/Date field (e.g. an empty
+// Rating input). Mongoose can't cast "" to a Number or Date and throws a
+// CastError, so strip those out here and let the schema default apply
+// instead of 500-ing on a blank optional field.
+const sanitizeForSchema = (Model, body) => {
+  const clean = { ...body };
+  const paths = Model.schema.paths;
+  for (const key of Object.keys(clean)) {
+    const path = paths[key];
+    if (path && clean[key] === "" && ["Number", "Date"].includes(path.instance)) {
+      delete clean[key];
+    }
+  }
+  return clean;
+};
+
 export const listResource = async (req, res) => {
   const Model = resources[req.params.resource];
   const page = Math.max(Number(req.query.page) || 1, 1);
@@ -23,7 +39,7 @@ export const listResource = async (req, res) => {
 
 export const createResource = async (req, res) => {
   const Model = resources[req.params.resource];
-  const item = await Model.create(req.body);
+  const item = await Model.create(sanitizeForSchema(Model, req.body));
   await recordAudit(req, "crud.create", req.params.resource, item._id);
   res.status(201).json({ success: true, item });
 };
@@ -32,7 +48,7 @@ export const updateResource = async (req, res) => {
   const Model = resources[req.params.resource];
   const previous = await Model.findById(req.params.id).lean();
   if (!previous) return res.status(404).json({ success: false, message: "Record not found" });
-  const item = await Model.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true, runValidators: true });
+  const item = await Model.findByIdAndUpdate(req.params.id, { $set: sanitizeForSchema(Model, req.body) }, { new: true, runValidators: true });
   await recordAudit(req, "crud.update", req.params.resource, item._id, { changedFields: Object.keys(req.body) });
   res.json({ success: true, item });
 };

@@ -16,7 +16,9 @@ Copy the safe environment template and replace the placeholders with local or st
 cp .env.example .env
 ```
 
-The minimum required variables are `MONGODB_URI`, `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and `FRONTEND_URL`. SMTP variables are required for password-reset notifications. The first administrator is seeded idempotently from the admin variables after MongoDB connects.
+The minimum required variables are `MONGODB_URI`, `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and `FRONTEND_URL` — the server refuses to start without them. SMTP variables are required for password-reset, contact form, and booking emails. `IMAGEKIT_PUBLIC_KEY`, `IMAGEKIT_PRIVATE_KEY`, and `IMAGEKIT_URL_ENDPOINT` are required for gallery uploads — get them from the [ImageKit dashboard](https://imagekit.io/dashboard/developer/api-keys); without them the upload endpoint returns a 503 instead of failing silently. The first administrator is seeded idempotently from the admin variables after MongoDB connects.
+
+Gallery images are uploaded directly to ImageKit (no local disk storage), so this backend runs unmodified on ephemeral/serverless hosts. Any pre-existing images under `backend/uploads/` (from before this migration) still work — the delete endpoint falls back to removing them from disk.
 
 Start the backend:
 

@@ -1,18 +1,10 @@
 import multer from "multer";
 import path from "path";
-import fs from "fs";
-import crypto from "crypto";
 
-const storageDir = path.join(process.cwd(), "uploads");
-if (!fs.existsSync(storageDir)) fs.mkdirSync(storageDir, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, storageDir),
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, `${crypto.randomBytes(18).toString("hex")}${ext}`);
-  },
-});
+// Files are held in memory only, then streamed straight to ImageKit —
+// nothing is written to local disk, so this works unmodified on any
+// stateless/ephemeral host (Vercel, Render, containers, etc).
+const storage = multer.memoryStorage();
 
 const allowed = new Map([
   ["image/jpeg", [".jpg", ".jpeg"]],
