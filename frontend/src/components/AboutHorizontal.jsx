@@ -2,8 +2,8 @@ import { motion, useScroll, useSpring, useTransform } from "framer-motion";
 import { useRef } from "react";
 
 const visionaryImage = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1200&auto=format&fit=crop";
-const storyImage1 = "https://images.unsplash.com/photo-1519741497674-611481863552?w=1200&auto=format&fit=crop";
-const storyImage2 = "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=1200&auto=format&fit=crop";
+const storyImage1 = "https://images.unsplash.com/photo-1587271636175-90d58cdad458?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?w=1200&auto=format&fit=crop";
+const storyImage2 = "https://images.unsplash.com/photo-1735052712425-f44a4d4b6cd7?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?w=1200&auto=format&fit=crop";
 
 export default function AboutHorizontal() {
   const ref = useRef(null);
@@ -21,11 +21,11 @@ export default function AboutHorizontal() {
   // 3. Smooth Track Position Mapping
   const x = useTransform(smoothProgress, [0, 1], ["0%", "-66.666%"]);
 
-  // 4. Ambient Dynamic Background Gradient
+  // 4. Ambient Dynamic Background Gradient (Starts at pure #000000 for Slide 1)
   const background = useTransform(
     smoothProgress,
     [0, 0.5, 1],
-    ["#040404", "#080706", "#0c0a07"]
+    ["#000000", "#080706", "#0c0a07"]
   );
 
   // 5. Parallax & Scale Transforms
@@ -53,18 +53,6 @@ export default function AboutHorizontal() {
   const slide3TextOpacity = useTransform(smoothProgress, [0.65, 0.88], [0, 1]);
   const slide3TextBlur = useTransform(smoothProgress, [0.65, 0.88], ["blur(12px)", "blur(0px)"]);
 
-  // 7. Progress Indicator Keyframes
-  const progressWidth0 = useTransform(smoothProgress, [0, 0.33, 0.34], [60, 60, 20]);
-  const progressWidth1 = useTransform(smoothProgress, [0.33, 0.34, 0.66, 0.67], [20, 60, 60, 20]);
-  const progressWidth2 = useTransform(smoothProgress, [0.66, 0.67, 1], [20, 60, 60]);
-
-  const progressOpacity0 = useTransform(smoothProgress, [0, 0.33, 0.34], [1, 1, 0.3]);
-  const progressOpacity1 = useTransform(smoothProgress, [0.33, 0.34, 0.66, 0.67], [0.3, 1, 1, 0.3]);
-  const progressOpacity2 = useTransform(smoothProgress, [0.66, 0.67, 1], [0.3, 1, 1]);
-
-  const progressWidths = [progressWidth0, progressWidth1, progressWidth2];
-  const progressOpacities = [progressOpacity0, progressOpacity1, progressOpacity2];
-
   return (
     <motion.section
       ref={ref}
@@ -79,8 +67,8 @@ export default function AboutHorizontal() {
           className="flex h-full w-[300vw] will-change-transform"
           style={{ x }}
         >
-          {/* SLIDE 1: THE VISIONARY */}
-          <div className="relative flex h-screen w-screen flex-none items-center px-6 md:px-16 lg:px-32">
+          {/* SLIDE 1: THE VISIONARY (Explicit bg-black) */}
+          <div className="relative flex h-screen w-screen flex-none items-center bg-black px-6 md:px-16 lg:px-32">
             <div className="mx-auto grid w-full max-w-7xl items-center gap-12 md:grid-cols-12">
               <motion.div
                 style={{ scale: portraitScale }}
@@ -196,7 +184,6 @@ export default function AboutHorizontal() {
             />
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/20 to-black/40" />
 
-            {/* SLIDE 2 DYNAMIC DISSOLVING/VANISHING TYPOGRAPHY OVERLAY */}
             <motion.div
               style={{
                 x: slide2TextX,
@@ -205,9 +192,6 @@ export default function AboutHorizontal() {
               }}
               className="absolute bottom-24 left-12 max-w-2xl md:left-24 will-change-[opacity,transform,filter]"
             >
-              <p className="mb-2 text-xs uppercase tracking-[0.5em] text-[#C6A75E]">
-                Editorial Perspective
-              </p>
               <h2 className="font-serif text-3xl italic text-white/90 md:text-5xl">
                 "Capturing moments that exist between seconds."
               </h2>
@@ -224,7 +208,6 @@ export default function AboutHorizontal() {
             />
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/80" />
 
-            {/* SLIDE 3 DYNAMIC FADE & BLUR FINALE OVERLAY */}
             <motion.div
               style={{
                 y: slide3TextY,
@@ -233,12 +216,9 @@ export default function AboutHorizontal() {
               }}
               className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center will-change-[opacity,transform,filter]"
             >
-              <span className="mb-4 text-xs uppercase tracking-[0.8em] text-[#C6A75E]">
-                The Craft
-              </span>
-              <h2 className="max-w-4xl font-serif text-4xl font-light leading-tight md:text-6xl lg:text-7xl">
-                Timeless Imagery For The Unapologetically Romantic.
-              </h2>
+              <h2 className="font-serif text-3xl font-light leading-tight sm:text-4xl md:text-5xl lg:text-6xl">
+  Capturing The Kind Of Love That Makes Ordinary Moments Feel Beautiful And Forever.
+</h2>
             </motion.div>
           </div>
         </motion.div>

@@ -8,6 +8,7 @@ import TestimonialSection from "../components/TestimonialSection"
 import CinematicHero from "./CinematicHero"
 import ContactPage from "./ContactPage"
 import LandingPage from "./LandingPage"
+import Wedding from "../components/Wedding"
 
 const Home = () => {
     return (
@@ -16,6 +17,7 @@ const Home = () => {
             <HomePortfolio />
             <AboutHorizontal />
             <AboutSection />
+            <Wedding />
             <ServicesSection />
             <TestimonialSection />
             <FaqSection />

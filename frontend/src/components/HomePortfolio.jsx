@@ -58,6 +58,17 @@ const portfolioItems = [
     alt: "Wedding couple in a candid moment",
     caption: "Real laughter, real intimacy, remembered beautifully.",
   },
+  {
+    url: "aHR0cHM6Ly9yYWNobmFuaXJhbmphbi5jb20vd3AtY29udGVudC91cGxvYWRzLzIwMjYvMDEvVG9wLURlc3RpbmF0aW9uLVdlZGRpbmctUGhvdG9ncmFwaGVyLWluLUluZGlhLUludGVybmF0aW9uYWwtMS53ZWJw",
+    alt: "Destination wedding couple portrait",
+    caption:
+      "Destination wedding photography, capturing the feeling of every celebration.",
+  },
+  {
+    url: "aHR0cHM6Ly9yYWNobmFuaXJhbmphbi5jb20vd3AtY29udGVudC91cGxvYWRzLzIwMjUvMDEvcmFjaG5hLW5pcmFuamFuLXNsaWRlLTAxLndlYnA=",
+    alt: "Traditional Indian wedding ceremony",
+    caption: "Tradition, colour, and the little in-between moments.",
+  },
 ];
 
 function AnimatedPortfolioCard({ item, index, onClick }) {

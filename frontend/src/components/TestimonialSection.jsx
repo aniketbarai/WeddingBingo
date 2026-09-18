@@ -9,123 +9,120 @@ export default function TestimonialSection() {
 
   useEffect(() => {
     let active = true;
-    api.get("/api/public/testimonials")
-      .then(({ data }) => { if (active) { setTestimonials(data.items || []); setStatus("ready"); } })
-      .catch(() => { if (active) setStatus("error"); });
-    return () => { active = false; };
+    api
+      .get("/api/public/testimonials")
+      .then(({ data }) => {
+        if (active) {
+          setTestimonials(data.items || []);
+          setStatus("ready");
+        }
+      })
+      .catch(() => {
+        if (active) setStatus("error");
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
-  // Duplicate the list to create a seamless infinite loop
-  const doubleTestimonials = [...testimonials, ...testimonials];
-
   return (
-    <section id="testimonials" className="bg-[#050505] text-white py-32 overflow-hidden relative">
+    <section
+      id="testimonials"
+      className="relative overflow-hidden bg-stone-50 py-28 text-slate-900 selection:bg-[#C6A75E] selection:text-white"
+    >
+      {/* SOFT LIGHT BACKGROUND GLOW */}
+      <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[700px] rounded-full bg-[#C6A75E]/10 blur-[130px]" />
 
       {/* SECTION HEADER */}
-      <div className="max-w-7xl mx-auto px-6 mb-20">
+      <div className="relative z-10 mx-auto mb-16 max-w-4xl px-6 text-center">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="text-center"
         >
-          <span className="text-[10px] tracking-[0.8em] text-[#C6A75E] uppercase font-bold mb-4 block">
-            The Gallery of Praise
+          <span className="mb-3 block text-[10px] font-semibold uppercase tracking-[0.5em] text-[#C6A75E]">
+            Testimonials
           </span>
-          <h2 className="text-5xl md:text-8xl font-extralight tracking-tighter leading-none mb-6">
-            Loved by <span className="italic font-serif text-[#C6A75E]">Souls.</span>
+          <h2 className="font-serif text-3xl font-light italic leading-tight text-slate-900 sm:text-4xl md:text-5xl">
+            Words from couples.
           </h2>
-          <div className="h-[1px] w-24 bg-[#C6A75E] mx-auto opacity-50" />
         </motion.div>
       </div>
 
-      {status === "loading" && (
-        <div className="flex gap-8 px-6 max-w-7xl mx-auto overflow-hidden">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="w-[350px] md:w-[450px] flex-none h-64 rounded-[2.5rem] border border-white/5 bg-white/[0.02] animate-pulse" />
-          ))}
-        </div>
-      )}
+      {/* CONTAINER */}
+      <div className="relative z-10 mx-auto max-w-7xl px-6">
+        {/* SKELETON LOADING GRID */}
+        {status === "loading" && (
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <div
+                key={i}
+                className="h-64 animate-pulse rounded-2xl bg-slate-200/60"
+              />
+            ))}
+          </div>
+        )}
 
-      {status === "error" && (
-        <p className="text-center text-sm text-white/40">Testimonials could not be loaded right now. Please check back shortly.</p>
-      )}
+        {/* ERROR STATE */}
+        {status === "error" && (
+          <p className="text-center text-xs uppercase tracking-widest text-slate-400">
+            Unable to load testimonials at this time.
+          </p>
+        )}
 
-      {status === "ready" && testimonials.length === 0 && (
-        <p className="text-center text-sm text-white/40">No testimonials published yet.</p>
-      )}
+        {/* EMPTY STATE */}
+        {status === "ready" && testimonials.length === 0 && (
+          <p className="text-center text-xs uppercase tracking-widest text-slate-400">
+            No testimonials published yet.
+          </p>
+        )}
 
-      {status === "ready" && testimonials.length > 0 && (
-        <>
-          {/* INFINITE SCROLLING MARQUEE */}
-          <div className="relative flex">
-            <motion.div
-              className="flex gap-8 pr-8"
-              animate={{ x: ["0%", "-50%"] }}
-              transition={{
-                ease: "linear",
-                duration: 30,
-                repeat: Infinity
-              }}
-            >
-              {doubleTestimonials.map((item, index) => (
-                <div
-                  key={`${item._id || item.coupleName}-${index}`}
-                  className="w-[350px] md:w-[450px] flex-none group cursor-pointer"
-                >
-                  <div className="h-full bg-white/[0.02] border border-white/5 rounded-[2.5rem] p-10 backdrop-blur-sm transition-all duration-700 group-hover:bg-[#C6A75E]/5 group-hover:border-[#C6A75E]/20 group-hover:-translate-y-2">
+        {/* READY STATE - GRID LAYOUT */}
+        {status === "ready" && testimonials.length > 0 && (
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {testimonials.map((item, index) => (
+              <motion.div
+                key={item._id || `${item.coupleName}-${index}`}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: (index % 3) * 0.1 }}
+                className="group relative flex h-full flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-8 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-[#C6A75E]/50 hover:shadow-md"
+              >
+                {/* QUOTE TEXT */}
+                <blockquote className="mb-6 font-serif text-base italic leading-relaxed text-slate-700 transition-colors duration-300 group-hover:text-slate-900">
+                  “{item.testimonial}”
+                </blockquote>
 
-                    {/* Visual Accent */}
-                    <div className="w-8 h-[1px] bg-[#C6A75E] mb-8 group-hover:w-16 transition-all duration-700" />
-
-                    <p className="text-gray-400 text-lg md:text-xl font-light leading-relaxed mb-10 italic font-serif">
-                      "{item.testimonial}"
+                {/* CARD FOOTER */}
+                <div className="flex items-center justify-between border-t border-slate-100 pt-4">
+                  <div>
+                    <p className="font-serif text-sm font-medium tracking-wide text-slate-900">
+                      {item.coupleName}
                     </p>
-
-                    <div className="flex items-center gap-4">
-                      <div className="overflow-hidden rounded-full w-12 h-12 border border-[#C6A75E]/30 group-hover:border-[#C6A75E] transition-colors flex items-center justify-center bg-white/5">
-                        {item.image ? (
-                          <img
-                            src={item.image}
-                            alt={item.coupleName}
-                            className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
-                          />
-                        ) : (
-                          <span className="text-[10px] text-[#C6A75E] font-serif">{item.coupleName?.charAt(0) || "?"}</span>
-                        )}
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-medium tracking-wide group-hover:text-[#C6A75E] transition-colors">
-                          {item.coupleName}
-                        </h4>
-                        <p className="text-[9px] text-gray-600 uppercase tracking-widest mt-1">
-                          {item.location || "Signature Couple"}
-                        </p>
-                      </div>
-                    </div>
+                    <p className="text-[10px] uppercase tracking-widest text-slate-400">
+                      {item.location || "Client Story"}
+                    </p>
                   </div>
+
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt={item.coupleName}
+                      className="h-9 w-9 rounded-full border border-slate-200 object-cover opacity-90 transition-all duration-300 group-hover:scale-105 group-hover:opacity-100"
+                    />
+                  ) : (
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-50 font-serif text-xs text-[#C6A75E]">
+                      {item.coupleName?.charAt(0) || "★"}
+                    </div>
+                  )}
                 </div>
-              ))}
-            </motion.div>
+              </motion.div>
+            ))}
           </div>
-
-          {/* AMBIENT BACKGROUND GLOW */}
-          <div className="absolute -bottom-20 left-1/2 -translate-x-1/2 w-full h-64 bg-[#C6A75E]/5 blur-[120px] rounded-full pointer-events-none" />
-
-          {/* SATISFACTION TAG */}
-          <div className="mt-20 text-center relative z-10">
-            <motion.div
-               initial={{ scale: 0.9, opacity: 0 }}
-               whileInView={{ scale: 1, opacity: 1 }}
-               className="inline-block px-6 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-xl"
-            >
-              <p className="text-[10px] text-gray-400 uppercase tracking-[0.4em]">
-                <span className="text-white">{testimonials.length}+</span> Stories Captured Globally
-              </p>
-            </motion.div>
-          </div>
-        </>
-      )}
+        )}
+      </div>
     </section>
   );
 }
