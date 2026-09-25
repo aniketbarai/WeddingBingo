@@ -20,6 +20,7 @@ import AdminResetPassword from "./pages/admin/AdminResetPassword";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminGallery from "./pages/admin/AdminGallery";
 import AdminGlimpse from "./pages/admin/AdminGlimpse";
+import AdminAboutStory from "./pages/admin/AdminAboutStory";
 import AdminReviews from "./pages/admin/AdminReviews";
 import AdminPackages from "./pages/admin/AdminPackages";
 import AdminInquiries from "./pages/admin/AdminInquiries";
@@ -74,6 +75,7 @@ function App() {
             <Route path="/admin/reset-password/:token" element={<AdminResetPassword />} />
             <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/glimpse" element={<ProtectedRoute><AdminGlimpse /></ProtectedRoute>} />
+            <Route path="/admin/about-story" element={<ProtectedRoute><AdminAboutStory /></ProtectedRoute>} />
             <Route path="/admin/gallery" element={<ProtectedRoute><AdminGallery /></ProtectedRoute>} />
             <Route path="/admin/reviews" element={<ProtectedRoute><AdminReviews /></ProtectedRoute>} />
             <Route path="/admin/testimonials" element={<Navigate to="/admin/reviews" replace />} />

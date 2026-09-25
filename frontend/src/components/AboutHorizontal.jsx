@@ -1,15 +1,57 @@
 import { motion, useScroll, useSpring, useTransform } from "framer-motion";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { api } from "../api/client.js";
 
-const visionaryImage =
-  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1200&auto=format&fit=crop";
-const storyImage1 =
-  "https://images.unsplash.com/photo-1587271636175-90d58cdad458?q=80&w=1170&auto=format&fit=crop";
-const storyImage2 =
-  "https://images.unsplash.com/photo-1735052712425-f44a4d4b6cd7?q=80&w=1170&auto=format&fit=crop";
+// Fallback content shown until the API responds (or if it's unreachable),
+// so the section never renders empty. Mirrors the site's original slides.
+const defaultStory = {
+  slide1: {
+    eyebrow: "The Visionary",
+    heading: "Pradeep Jartarghar",
+    text: "Dedicated to capturing raw emotions, timeless traditions, and the singular essence of every couple. Blending high-fashion elegance with unscripted documentary storytelling.",
+    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1200&auto=format&fit=crop",
+    alt: "Pradeep Jartarghar",
+  },
+  slide2: {
+    text: "Capturing moments that exist between seconds.",
+    image: "https://images.unsplash.com/photo-1587271636175-90d58cdad458?q=80&w=1170&auto=format&fit=crop",
+    alt: "Wedding celebration detail",
+  },
+  slide3: {
+    text: "Capturing The Kind Of Love That Makes Ordinary Moments Feel Beautiful And Forever.",
+    image: "https://images.unsplash.com/photo-1735052712425-f44a4d4b6cd7?q=80&w=1170&auto=format&fit=crop",
+    alt: "Wedding portrait",
+  },
+};
 
 export default function AboutHorizontal() {
   const ref = useRef(null);
+  const [story, setStory] = useState(defaultStory);
+
+  useEffect(() => {
+    let active = true;
+    api
+      .get("/api/about-story")
+      .then(({ data }) => {
+        if (active && data?.story) {
+          setStory({
+            slide1: { ...defaultStory.slide1, ...data.story.slide1 },
+            slide2: { ...defaultStory.slide2, ...data.story.slide2 },
+            slide3: { ...defaultStory.slide3, ...data.story.slide3 },
+          });
+        }
+      })
+      .catch(() => {
+        // Keep the fallback content on any network/API error.
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const visionaryImage = story.slide1.image;
+  const storyImage1 = story.slide2.image;
+  const storyImage2 = story.slide3.image;
 
   // 1. Scroll Progress
   const { scrollYProgress } = useScroll({ target: ref });
@@ -80,19 +122,19 @@ export default function AboutHorizontal() {
             <motion.img
               style={{ opacity: slide1Opacity }}
               src={visionaryImage}
-              alt="Pradeep Jartarghar"
+              alt={story.slide1.alt || "Pradeep Jartarghar"}
               className="absolute inset-0 h-full w-full object-cover grayscale transition-all duration-300 [will-change:opacity]"
             />
             <motion.img
               style={{ opacity: slide2Opacity }}
               src={storyImage1}
-              alt="Wedding celebration detail"
+              alt={story.slide2.alt || "Wedding celebration detail"}
               className="absolute inset-0 h-full w-full object-cover [will-change:opacity]"
             />
             <motion.img
               style={{ opacity: slide3Opacity }}
               src={storyImage2}
-              alt="Wedding portrait"
+              alt={story.slide3.alt || "Wedding portrait"}
               className="absolute inset-0 h-full w-full object-cover [will-change:opacity]"
             />
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
@@ -107,15 +149,14 @@ export default function AboutHorizontal() {
               className="absolute inset-0 flex flex-col items-center justify-center [will-change:transform,opacity]"
             >
               <span className="mb-1 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.4em] text-[#C6A75E]">
-                The Visionary
+                {story.slide1.eyebrow}
               </span>
               <h1 className="mb-2 text-2xl font-light tracking-tight">
                 <span className="mr-2 font-serif italic text-[#C6A75E]">Meet</span>
-                Pradeep Jartarghar
+                {story.slide1.heading}
               </h1>
               <p className="mb-4 text-xs font-light leading-relaxed text-neutral-400">
-                Capturing raw emotions, timeless traditions, and high-fashion elegance
-                with unscripted documentary storytelling.
+                {story.slide1.text}
               </p>
               <button
                 type="button"
@@ -134,7 +175,7 @@ export default function AboutHorizontal() {
               className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none [will-change:transform,opacity]"
             >
               <h2 className="font-serif text-xl italic text-white/90">
-                "Capturing moments that exist between seconds."
+                "{story.slide2.text}"
               </h2>
             </motion.div>
 
@@ -144,7 +185,7 @@ export default function AboutHorizontal() {
               className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none [will-change:transform,opacity]"
             >
               <h2 className="font-serif text-lg font-light leading-snug">
-                Capturing The Kind Of Love That Makes Ordinary Moments Feel Beautiful And Forever.
+                {story.slide3.text}
               </h2>
             </motion.div>
 
@@ -196,21 +237,21 @@ export default function AboutHorizontal() {
                   <img
                     className="h-full w-full object-cover grayscale transition-all duration-500 ease-out hover:grayscale-0"
                     src={visionaryImage}
-                    alt="Pradeep Jartarghar"
+                    alt={story.slide1.alt || "Pradeep Jartarghar"}
                   />
                 </div>
               </div>
               <div className="col-span-7 flex flex-col justify-center text-left">
                 <span className="mb-2 inline-flex items-center gap-3 text-xs font-bold uppercase tracking-[0.5em] text-[#C6A75E]">
                   <span className="h-[1px] w-8 bg-[#C6A75E]" />
-                  The Visionary
+                  {story.slide1.eyebrow}
                 </span>
                 <h1 className="mb-6 text-5xl lg:text-7xl font-light tracking-tight">
                   <span className="mr-3 font-serif italic text-[#C6A75E]">Meet</span>
-                  Pradeep Jartarghar
+                  {story.slide1.heading}
                 </h1>
                 <p className="mb-8 max-w-xl text-base font-light leading-relaxed text-neutral-400">
-                  Dedicated to capturing raw emotions, timeless traditions, and the singular essence of every couple. Blending high-fashion elegance with unscripted documentary storytelling.
+                  {story.slide1.text}
                 </p>
                 <div>
                   <button
@@ -233,13 +274,13 @@ export default function AboutHorizontal() {
               <div className="relative col-span-12 h-[70vh] overflow-hidden rounded-3xl border border-white/10">
                 <img
                   src={storyImage1}
-                  alt="Wedding celebration detail"
+                  alt={story.slide2.alt || "Wedding celebration detail"}
                   className="h-full w-full object-cover opacity-85"
                 />
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/30" />
                 <div className="absolute bottom-12 left-12 max-w-2xl">
                   <h2 className="font-serif text-5xl lg:text-6xl italic text-white/90">
-                    "Capturing moments that exist between seconds."
+                    "{story.slide2.text}"
                   </h2>
                 </div>
               </div>
@@ -252,13 +293,13 @@ export default function AboutHorizontal() {
               <div className="relative col-span-12 h-[70vh] overflow-hidden rounded-3xl border border-white/10">
                 <img
                   src={storyImage2}
-                  alt="Wedding portrait"
+                  alt={story.slide3.alt || "Wedding portrait"}
                   className="h-full w-full object-cover opacity-80"
                 />
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/30" />
                 <div className="absolute inset-0 flex items-center justify-center p-12 text-center">
                   <h2 className="max-w-4xl font-serif text-4xl lg:text-5xl font-light leading-snug">
-                    Capturing The Kind Of Love That Makes Ordinary Moments Feel Beautiful And Forever.
+                    {story.slide3.text}
                   </h2>
                 </div>
               </div>

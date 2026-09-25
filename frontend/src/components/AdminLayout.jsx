@@ -5,6 +5,7 @@ import { logoutAdmin } from "../api/client.js";
 const ADMIN_LINKS = [
   { name: "Dashboard", link: "/admin/dashboard" },
   { name: "Glimpse", link: "/admin/glimpse" },
+  { name: "About Story", link: "/admin/about-story" },
   { name: "Gallery", link: "/admin/gallery" },
   { name: "Reviews", link: "/admin/reviews" },
   { name: "Packages", link: "/admin/packages" },
