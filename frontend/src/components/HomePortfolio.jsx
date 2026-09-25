@@ -7,7 +7,10 @@ import {
   X,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { api } from "../api/client.js";
 
+// Fallback shown only if the API hasn't been populated yet / is unreachable,
+// so the section never renders completely empty during first setup.
 const decodeUrl = (encodedUrl) => {
   try {
     return window.atob(encodedUrl);
@@ -16,7 +19,7 @@ const decodeUrl = (encodedUrl) => {
   }
 };
 
-const portfolioItems = [
+const fallbackItems = [
   {
     url: "aHR0cHM6Ly9yYWNobmFuaXJhbmphbi5jb20vd3AtY29udGVudC91cGxvYWRzLzIwMjYvMDEvVG9wLURlc3RpbmF0aW9uLVdlZGRpbmctUGhvdG9ncmFwaGVyLWluLUluZGlhLUludGVybmF0aW9uYWwtMS53ZWJw",
     alt: "Destination wedding couple portrait",
@@ -38,38 +41,30 @@ const portfolioItems = [
     alt: "Traditional Indian wedding ceremony",
     caption: "Tradition, colour, and the little in-between moments.",
   },
-  {
-    url: "aHR0cHM6Ly9yYWNobmFuaXJhbmphbi5jb20vd3AtY29udGVudC91cGxvYWRzLzIwMjUvMDEvcmFjaG5hLW5pcmFuamFuLXNsaWRlLTAyLndlYnA=",
-    alt: "Bride and groom wedding photograph",
-    caption: "A quiet frame from a day full of beautiful chaos.",
-  },
-  {
-    url: "aHR0cHM6Ly9yYWNobmFuaXJhbmphbi5jb20vd3AtY29udGVudC91cGxvYWRzLzIwMjUvMDEvcmFjaG5hLW5pcmFuamFuLXNsaWRlLTAzLndlYnA=",
-    alt: "Emotional wedding celebration",
-    caption: "The honest, emotional stories behind the grand celebration.",
-  },
-  {
-    url: "aHR0cHM6Ly9yYWNobmFuaXJhbmphbi5jb20vd3AtY29udGVudC91cGxvYWRzLzIwMjUvMDEvcmFjaG5hLW5pcmFuamFuLXNsaWRlLTA0LndlYnA=",
-    alt: "Cinematic wedding scene",
-    caption: "Cinematic frames that let you relive the atmosphere.",
-  },
-  {
-    url: "aHR0cHM6Ly9yYWNobmFuaXJhbmphbi5jb20vd3AtY29udGVudC91cGxvYWRzLzIwMjUvMDEvcmFjaG5hLW5pcmFuamFuLXNsaWRlLTA1LndlYnA=",
-    alt: "Wedding couple in a candid moment",
-    caption: "Real laughter, real intimacy, remembered beautifully.",
-  },
-  {
-    url: "aHR0cHM6Ly9yYWNobmFuaXJhbmphbi5jb20vd3AtY29udGVudC91cGxvYWRzLzIwMjYvMDEvVG9wLURlc3RpbmF0aW9uLVdlZGRpbmctUGhvdG9ncmFwaGVyLWluLUluZGlhLUludGVybmF0aW9uYWwtMS53ZWJw",
-    alt: "Destination wedding couple portrait",
-    caption:
-      "Destination wedding photography, capturing the feeling of every celebration.",
-  },
-  {
-    url: "aHR0cHM6Ly9yYWNobmFuaXJhbmphbi5jb20vd3AtY29udGVudC91cGxvYWRzLzIwMjUvMDEvcmFjaG5hLW5pcmFuamFuLXNsaWRlLTAxLndlYnA=",
-    alt: "Traditional Indian wedding ceremony",
-    caption: "Tradition, colour, and the little in-between moments.",
-  },
 ];
+
+// Normalizes both the live API shape ({ src, type, thumbnail, alt, caption })
+// and the base64-encoded fallback shape into one shape the grid renders.
+const normalizeItems = (apiItems) => {
+  if (Array.isArray(apiItems) && apiItems.length > 0) {
+    return apiItems.map((item) => ({
+      id: item._id,
+      type: item.type === "video" ? "video" : "image",
+      src: item.src,
+      thumbnail: item.thumbnail || item.src,
+      alt: item.alt || item.title || "Wedding Bingo glimpse",
+      caption: item.caption || item.title || "",
+    }));
+  }
+  return fallbackItems.map((item, index) => ({
+    id: `fallback-${index}`,
+    type: "image",
+    src: decodeUrl(item.url),
+    thumbnail: decodeUrl(item.url),
+    alt: item.alt,
+    caption: item.caption,
+  }));
+};
 
 function AnimatedPortfolioCard({ item, index, onClick }) {
   const [isVisible, setIsVisible] = useState(false);
@@ -121,26 +116,45 @@ function AnimatedPortfolioCard({ item, index, onClick }) {
         transitionDelay: `${(index % 4) * 80}ms`,
         transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)",
       }}
-      className={`group relative overflow-hidden bg-black text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-white transition-all duration-700 hover:-translate-y-1 hover:shadow-2xl ${
+      className={`group relative mb-1 block w-full overflow-hidden break-inside-avoid bg-black text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-white transition-all duration-700 hover:-translate-y-1 hover:shadow-2xl ${
         isVisible
           ? "opacity-100 translate-y-0 scale-100 rotate-0"
           : "opacity-0 translate-y-16 scale-80 rotate-1"
-      } ${index === 1 || index === 6 ? "lg:row-span-2" : ""}`}
+      }`}
       aria-label={`Open ${item.alt}`}
     >
-      <div
-        className={`${index === 1 || index === 6 ? "aspect-[3/4] lg:h-full" : "aspect-[4/5]"}`}
-      >
-        <img
-          src={decodeUrl(item.url)}
-          alt={item.alt}
-          className={`h-full w-full object-cover transition-all duration-1000 ease-out group-hover:scale-105 group-hover:grayscale-0 ${
-            isColored
-              ? "grayscale-0 contrast-100"
-              : "grayscale contrast-125 opacity-80 lg:grayscale-0 lg:contrast-100 lg:opacity-100"
-          }`}
-          loading="lazy"
-        />
+      <div className="relative">
+        {item.type === "video" ? (
+          <video
+            src={item.src}
+            muted
+            playsInline
+            preload="metadata"
+            className={`block h-auto w-full transition-all duration-1000 ease-out group-hover:scale-105 group-hover:grayscale-0 ${
+              isColored
+                ? "grayscale-0 contrast-100"
+                : "grayscale contrast-125 opacity-80 lg:grayscale-0 lg:contrast-100 lg:opacity-100"
+            }`}
+          />
+        ) : (
+          <img
+            src={item.thumbnail}
+            alt={item.alt}
+            className={`block h-auto w-full transition-all duration-1000 ease-out group-hover:scale-105 group-hover:grayscale-0 ${
+              isColored
+                ? "grayscale-0 contrast-100"
+                : "grayscale contrast-125 opacity-80 lg:grayscale-0 lg:contrast-100 lg:opacity-100"
+            }`}
+            loading="lazy"
+          />
+        )}
+        {item.type === "video" && (
+          <span className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </span>
+        )}
       </div>
 
       {/* Left-to-Right Overlay with Search Icon */}
@@ -154,9 +168,25 @@ function AnimatedPortfolioCard({ item, index, onClick }) {
 }
 
 export default function HomePortfolio() {
+  const [portfolioItems, setPortfolioItems] = useState(() => normalizeItems([]));
   const [selectedIndex, setSelectedIndex] = useState(null);
   const selectedItem =
     selectedIndex === null ? null : portfolioItems[selectedIndex];
+
+  useEffect(() => {
+    let active = true;
+    api
+      .get("/api/glimpse")
+      .then(({ data }) => {
+        if (active) setPortfolioItems(normalizeItems(data?.items));
+      })
+      .catch(() => {
+        // Keep the fallback grid on any network/API error.
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const closeLightbox = () => setSelectedIndex(null);
   const showPrevious = () => {
@@ -211,11 +241,12 @@ export default function HomePortfolio() {
           </div>
         </div>
 
-        {/* 2 columns on mobile, 4 columns on desktop */}
-        <div className="grid grid-cols-2 gap-1 lg:grid-cols-4">
+        {/* Natural masonry: each photo/video keeps its own aspect ratio, nothing
+            is cropped. Fixed at 2 columns on mobile, scaling up to 4 on desktop. */}
+        <div className="columns-2 gap-1 lg:columns-4">
           {portfolioItems.map((item, index) => (
             <AnimatedPortfolioCard
-              key={item.url}
+              key={item.id}
               item={item}
               index={index}
               onClick={() => setSelectedIndex(index)}
@@ -265,11 +296,21 @@ export default function HomePortfolio() {
             className="flex max-h-full max-w-6xl flex-col items-center"
             onClick={(event) => event.stopPropagation()}
           >
-            <img
-              src={decodeUrl(selectedItem.url)}
-              alt={selectedItem.alt}
-              className="max-h-[80vh] max-w-full object-contain shadow-2xl"
-            />
+            {selectedItem.type === "video" ? (
+              <video
+                src={selectedItem.src}
+                poster={selectedItem.thumbnail}
+                className="max-h-[80vh] max-w-full object-contain shadow-2xl"
+                controls
+                autoPlay
+              />
+            ) : (
+              <img
+                src={selectedItem.src}
+                alt={selectedItem.alt}
+                className="max-h-[80vh] max-w-full object-contain shadow-2xl"
+              />
+            )}
             <figcaption className="mt-5 max-w-xl text-center text-xs leading-5 text-zinc-300">
               {selectedItem.caption}
             </figcaption>
