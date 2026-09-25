@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion, useScroll, useTransform } from "framer-motion";
-import { ArrowUpRight, Sparkles } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 
 // 6 Alternating Sentences with Toggling Colors
 const WORDS = [
@@ -68,7 +68,7 @@ const LandingPage = () => {
       data-navbar-theme="dark"
       data-scroll
       data-scroll-speed="-1.3"
-      className="relative h-screen w-full overflow-hidden bg-black selection:bg-[#C6A75E] selection:text-black"
+      className="relative min-h-[100dvh] h-screen w-full overflow-hidden bg-black selection:bg-[#C6A75E] selection:text-black"
     >
       {/* Parallax Background (ORIGINAL IMAGE PRESERVED) */}
       <motion.div style={{ y: yBg, scale: scaleBg }} className="absolute inset-0 h-full w-full">
@@ -85,46 +85,46 @@ const LandingPage = () => {
 
       {/* Soft Gold Radiance Spotlight */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div className="h-[35vw] w-[35vw] rounded-full bg-[#C6A75E]/15 blur-[130px]" />
+        <div className="h-[60vw] w-[60vw] max-w-[500px] max-h-[500px] sm:h-[35vw] sm:w-[35vw] rounded-full bg-[#C6A75E]/15 blur-[90px] sm:blur-[130px]" />
       </div>
 
-      {/* Content */}
+      {/* Content Container */}
       <motion.div
         style={{ opacity: opacityText, y: yText }}
-        className="relative z-10 flex h-full flex-col items-center justify-center px-6 text-center"
+        className="relative z-10 flex h-full w-full flex-col items-center justify-center px-4 sm:px-6 md:px-8 text-center"
       >
-        {/* Dynamic Heading (Scaled Down) */}
-<h1 className="max-w-2xl font-serif text-2xl leading-tight text-white sm:text-3xl md:text-4xl lg:text-5xl">
-  Capturing Love,
-  {/* ROTATING TYPEWRITER TEXT */}
-  <span className="mt-1 block min-h-[1.25em] font-serif italic tracking-tight">
-    <span className={`transition-colors duration-500 ${WORDS[wordIndex].color}`}>
-      {displayedText}
-    </span>
-    {/* Blinking Cursor */}
-    <motion.span
-      animate={{ opacity: [1, 0] }}
-      transition={{
-        duration: 0.6,
-        repeat: Infinity,
-        repeatType: "reverse",
-      }}
-      className="inline-block ml-1 font-sans text-[#C6A75E] font-extralight opacity-90"
-    >
-      |
-    </motion.span>
-  </span>
-</h1>
+        {/* Dynamic Heading with Responsive Scaling */}
+        <h1 className="max-w-4xl font-serif text-3xl leading-[1.18] text-white sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-normal tracking-tight">
+          Capturing Love,
+          {/* ROTATING TYPEWRITER TEXT */}
+          <span className="mt-2 block min-h-[2.5em] sm:min-h-[1.8em] md:min-h-[1.4em] font-serif italic tracking-tight">
+            <span className={`inline-block transition-colors duration-500 ${WORDS[wordIndex].color}`}>
+              {displayedText}
+            </span>
+            {/* Blinking Cursor */}
+            <motion.span
+              animate={{ opacity: [1, 0] }}
+              transition={{
+                duration: 0.6,
+                repeat: Infinity,
+                repeatType: "reverse",
+              }}
+              className="inline-block ml-1 font-sans text-[#C6A75E] font-extralight opacity-90"
+            >
+              |
+            </motion.span>
+          </span>
+        </h1>
 
-        <p className="mt-6 max-w-xl text-base font-light leading-relaxed text-neutral-300 md:text-xl">
+        <p className="mt-4 sm:mt-6 max-w-xs sm:max-w-md md:max-w-xl text-sm sm:text-base md:text-lg font-light leading-relaxed text-neutral-300">
           Luxury Wedding Photography that tells your timeless love story.
         </p>
 
         {/* ACTION BUTTON WITH SWEEP & ARROW ANIMATION */}
-        <div className="mt-10 flex gap-6 flex-wrap justify-center">
+        <div className="mt-8 sm:mt-10 flex gap-6 flex-wrap justify-center">
           <button
             onClick={handleScrollToTestimonials}
-            className="group relative inline-flex items-center gap-3 overflow-hidden rounded-full bg-[#C6A75E] px-9 py-4 text-xs font-bold tracking-[0.25em] uppercase text-black shadow-[0_10px_30px_rgba(198,167,94,0.3)] transition-all duration-500 hover:scale-105 hover:shadow-[0_15px_40px_rgba(198,167,94,0.5)] active:scale-95"
+            className="group relative inline-flex items-center gap-2.5 sm:gap-3 overflow-hidden rounded-full bg-[#C6A75E] px-7 py-3.5 sm:px-9 sm:py-4 text-[10px] sm:text-xs font-bold tracking-[0.2em] sm:tracking-[0.25em] uppercase text-black shadow-[0_10px_30px_rgba(198,167,94,0.3)] transition-all duration-500 hover:scale-105 hover:shadow-[0_15px_40px_rgba(198,167,94,0.5)] active:scale-95"
           >
             {/* Left to Right Light Shine Effect */}
             <span
@@ -136,8 +136,7 @@ const LandingPage = () => {
 
             {/* Emergent Up-Right Arrow Icon */}
             <ArrowUpRight
-              size={18}
-              className="relative z-10 -translate-x-1 translate-y-1 opacity-70 transition-all duration-300 group-hover:translate-x-0 group-hover:translate-y-0 group-hover:opacity-100"
+              className="relative z-10 size-4 sm:size-5 -translate-x-1 translate-y-1 opacity-70 transition-all duration-300 group-hover:translate-x-0 group-hover:translate-y-0 group-hover:opacity-100"
             />
           </button>
         </div>

@@ -73,24 +73,43 @@ const portfolioItems = [
 
 function AnimatedPortfolioCard({ item, index, onClick }) {
   const [isVisible, setIsVisible] = useState(false);
+  const [isColored, setIsColored] = useState(false);
   const cardRef = useRef(null);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
+    // Entrance Animation Observer
+    const entranceObserver = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsVisible(true);
-          observer.unobserve(entry.target);
+          entranceObserver.unobserve(entry.target);
         }
       },
-      { threshold: 0.1, rootMargin: "0px 0px -50px 0px" },
+      { threshold: 0.1, rootMargin: "0px 0px -50px 0px" }
+    );
+
+    // Color Reveal Observer - Applies ONLY on screens smaller than lg (1024px)
+    const colorObserver = new IntersectionObserver(
+      ([entry]) => {
+        const isMobileDevice = window.innerWidth < 1024;
+        if (isMobileDevice) {
+          setIsColored(entry.isIntersecting);
+        } else {
+          setIsColored(true); // Desktop remains colored
+        }
+      },
+      { threshold: 0.2, rootMargin: "-30% 0px -30% 0px" }
     );
 
     if (cardRef.current) {
-      observer.observe(cardRef.current);
+      entranceObserver.observe(cardRef.current);
+      colorObserver.observe(cardRef.current);
     }
 
-    return () => observer.disconnect();
+    return () => {
+      entranceObserver.disconnect();
+      colorObserver.disconnect();
+    };
   }, []);
 
   return (
@@ -106,16 +125,20 @@ function AnimatedPortfolioCard({ item, index, onClick }) {
         isVisible
           ? "opacity-100 translate-y-0 scale-100 rotate-0"
           : "opacity-0 translate-y-16 scale-80 rotate-1"
-      } ${index === 1 || index === 6 ? "sm:row-span-2 lg:row-span-2" : ""}`}
+      } ${index === 1 || index === 6 ? "lg:row-span-2" : ""}`}
       aria-label={`Open ${item.alt}`}
     >
       <div
-        className={`${index === 1 || index === 6 ? "aspect-[3/4] sm:h-full" : "aspect-[4/5]"}`}
+        className={`${index === 1 || index === 6 ? "aspect-[3/4] lg:h-full" : "aspect-[4/5]"}`}
       >
         <img
           src={decodeUrl(item.url)}
           alt={item.alt}
-          className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-105"
+          className={`h-full w-full object-cover transition-all duration-1000 ease-out group-hover:scale-105 group-hover:grayscale-0 ${
+            isColored
+              ? "grayscale-0 contrast-100"
+              : "grayscale contrast-125 opacity-80 lg:grayscale-0 lg:contrast-100 lg:opacity-100"
+          }`}
           loading="lazy"
         />
       </div>
@@ -174,11 +197,11 @@ export default function HomePortfolio() {
           <div className="group relative mx-auto mb-12 max-w-3xl text-center md:mb-16">
             {/* Main Title with Gradient & Shimmer */}
             <h2 className="relative font-serif text-5xl font-extralight tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-[#FFF2D6] via-[#C2A35C] to-[#8C6F2D] sm:text-6xl md:text-7xl drop-shadow-2xl selection:bg-[#C2A35C] selection:text-black">
-  <span className="inline-block pr-1 font-serif italic font-normal tracking-normal text-transparent bg-clip-text bg-gradient-to-tr from-[#8C6F2D] via-[#FFEBB3] to-[#C2A35C] drop-shadow-[0_2px_12px_rgba(194,163,92,0.4)]">
-    G
-  </span>
-  <span className="-ml-2">limpse</span>
-</h2>
+              <span className="inline-block pr-1 font-serif italic font-normal tracking-normal text-transparent bg-clip-text bg-gradient-to-tr from-[#8C6F2D] via-[#FFEBB3] to-[#C2A35C] drop-shadow-[0_2px_12px_rgba(194,163,92,0.4)]">
+                G
+              </span>
+              <span className="-ml-2">limpse</span>
+            </h2>
 
             {/* Multi-layered Accent Line */}
             <div className="relative mx-auto mt-3 flex h-0.5 w-24 items-center justify-center">
@@ -188,8 +211,8 @@ export default function HomePortfolio() {
           </div>
         </div>
 
-        {/* Minimal gap layout */}
-        <div className="grid grid-cols-1 gap-1 sm:grid-cols-2 lg:grid-cols-4">
+        {/* 2 columns on mobile, 4 columns on desktop */}
+        <div className="grid grid-cols-2 gap-1 lg:grid-cols-4">
           {portfolioItems.map((item, index) => (
             <AnimatedPortfolioCard
               key={item.url}
