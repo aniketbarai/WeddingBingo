@@ -74,7 +74,7 @@ const LandingPage = () => {
       <motion.div style={{ y: yBg, scale: scaleBg }} className="absolute inset-0 h-full w-full">
         <img
           rel="preload"
-          src="https://instagram.fbom19-3.fna.fbcdn.net/v/t51.82787-15/619595446_18001248938842405_1644051406423898218_n.jpg?stp=dst-jpg_e35_s640x640_sh2.08_tt6&_nc_cat=105&_nc_map=urlgen_bucketless&ig_cache_key=MzAyMzQyMDgzNTI2ODM1NTUwOA%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkZFRUQueHBpZHMuMTQ0MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=15lwF3SwHkEQ7kNvwEEYtGB&_nc_oc=Adqco81wBb06Sb3ri1IK8ahcTj0HuITrbdmmdH2i0GR5PJ1hzMisiM1fhd-r2XDIaMdq8nDvCheS3h3wHcL_xQK6&_nc_ad=z-m&_nc_cid=1174&_nc_zt=23&_nc_ht=instagram.fbom19-3.fna&_nc_gid=qZEiRZI2A2q_kPHuMmseng&_nc_ss=7a22e&oh=00_AQKPROJzyCb7ESZEWLqW94if5PW3k-hZrRosi_uORY5UJw&oe=6AB2CA11"
+          src="https://ik.imagekit.io/weddingbingo/wb_hero.jpg"
           alt="Wedding"
           className="h-[120%] w-full object-cover object-center"
         />

@@ -10,6 +10,7 @@ import IntroLoader from "./pages/IntroLoader";
 // Public pages
 import Home from "./pages/Home";
 import Gallery from "./pages/Gallery";
+import StoryDetail from "./pages/StoryDetail";
 import ContactPage from "./pages/ContactPage";
 
 // Admin pages
@@ -61,6 +62,7 @@ function App() {
             <Route path="/services" element={<ServicesSection />} />
             <Route path="/packages" element={<PackageSection />} />
             <Route path="/gallery" element={<Gallery />} />
+            <Route path="/gallery/story/:slug" element={<StoryDetail />} />
             <Route path="/testimonials" element={<TestimonialSection />} />
             <Route path="/contact" element={<ContactPage />} />
 
