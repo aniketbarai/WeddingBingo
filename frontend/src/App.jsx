@@ -23,7 +23,6 @@ import AdminReviews from "./pages/admin/AdminReviews";
 import AdminPackages from "./pages/admin/AdminPackages";
 import AdminInquiries from "./pages/admin/AdminInquiries";
 import AdminSettings from "./pages/admin/AdminSettings";
-import AdminServices from "./pages/admin/AdminServices";
 
 import AboutSection from "./components/AboutSection";
 import ServicesSection from "./components/ServicesSection";
@@ -79,7 +78,6 @@ function App() {
             <Route path="/admin/packages" element={<ProtectedRoute><AdminPackages /></ProtectedRoute>} />
             <Route path="/admin/inquiries" element={<ProtectedRoute><AdminInquiries /></ProtectedRoute>} />
             <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
-            <Route path="/admin/services" element={<ProtectedRoute><AdminServices /></ProtectedRoute>} />
 
             {/* Legacy service URLs redirect to the real services page instead of
                 silently re-rendering Home under a different path */}

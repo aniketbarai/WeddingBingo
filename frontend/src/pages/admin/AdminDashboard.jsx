@@ -5,7 +5,6 @@ import { api } from "../../api/client.js";
 
 const cards = [
   ["photos", "Photos", "/admin/gallery"],
-  ["services", "Services", "/admin/services"],
   ["inquiries", "Inquiries", "/admin/inquiries"],
   ["testimonials", "Testimonials", "/admin/testimonials"],
   ["packages", "Packages", "/admin/packages"],

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Plus, Search, Pencil, Trash2, X, UploadCloud } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, X } from "lucide-react";
 import { api } from "../../api/client.js";
 
 const CONFIG = {
@@ -57,7 +57,7 @@ const CONFIG = {
     columns: ["coupleName", "location", "rating", "published"],
   },
   packages: {
-    title: "Packages & Services",
+    title: "Packages",
     eyebrow: "Shape the offering",
     fields: [
       { key: "title", label: "Title", required: true },
@@ -69,19 +69,6 @@ const CONFIG = {
       { key: "active", label: "Active", type: "checkbox" },
     ],
     columns: ["title", "price", "category", "active"],
-  },
-  services: {
-    title: "Services",
-    eyebrow: "The studio offering",
-    fields: [
-      { key: "number", label: "Display number", required: true },
-      { key: "title", label: "Title", required: true },
-      { key: "description", label: "Description", type: "textarea", required: true },
-      { key: "image", label: "Service image", type: "image-upload", required: true },
-      { key: "order", label: "Display order", type: "number" },
-      { key: "active", label: "Active", type: "checkbox" },
-    ],
-    columns: ["number", "title", "active"],
   },
 };
 
@@ -101,7 +88,6 @@ export default function AdminResourcePage({ resource }) {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Debounce search state to prevent rapid API calls
   useEffect(() => {
@@ -168,20 +154,6 @@ export default function AdminResourcePage({ resource }) {
       await load();
     } catch {
       /* Soft toast error handling via api client */
-    }
-  };
-
-  const uploadServiceImage = async (file) => {
-    if (!file || resource !== "services") return;
-    if (!file.type.startsWith("image/")) return;
-    setUploadingImage(true);
-    try {
-      const formData = new FormData();
-      formData.append("image", file);
-      const { data } = await api.post("/api/admin/services/upload-image", formData, { headers: { "Content-Type": "multipart/form-data" } });
-      setEditing((current) => ({ ...current, image: data.image.url, imageFileId: data.image.fileId }));
-    } finally {
-      setUploadingImage(false);
     }
   };
 
@@ -311,13 +283,7 @@ export default function AdminResourcePage({ resource }) {
                   } text-xs uppercase tracking-widest text-white/45`}
                 >
                   {field.label}
-                  {field.type === "image-upload" ? (
-                    <div className="mt-2 rounded-xl border-2 border-dashed border-white/15 p-4 text-center transition hover:border-[#c6a75e]" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); uploadServiceImage(e.dataTransfer.files?.[0]); }}>
-                      <input type="file" accept="image/*" className="hidden" id="service-image-upload" onChange={(e) => uploadServiceImage(e.target.files?.[0])} />
-                      {editing[field.key] ? <img src={editing[field.key]} alt="Service preview" className="mx-auto mb-3 h-32 w-full rounded-lg object-cover" /> : <UploadCloud className="mx-auto mb-2 text-[#c6a75e]" />}
-                      <label htmlFor="service-image-upload" className="cursor-pointer text-xs normal-case tracking-normal text-white/60">{uploadingImage ? "Uploading to ImageKit…" : "Drag & drop an image here, or click to choose"}</label>
-                    </div>
-                  ) : field.type === "textarea" ? (
+                  {field.type === "textarea" ? (
                     <textarea
                       required={field.required}
                       value={editing[field.key] || ""}
