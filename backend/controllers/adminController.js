@@ -42,7 +42,7 @@ export const loginAdmin = asyncHandler(async (req, res) => {
 
 export const logoutAdmin = asyncHandler(async (req, res) => {
   if (req.admin) await recordAudit(req, "auth.logout", "Admin", req.admin._id);
-  res.clearCookie(SESSION_COOKIE, { httpOnly: true, sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax", secure: process.env.NODE_ENV === "production", path: "/" });
+  res.clearCookie(SESSION_COOKIE, { httpOnly: true, sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", secure: process.env.NODE_ENV === "production", path: "/" });
   return res.status(200).json({ success: true });
 });
 
@@ -58,7 +58,7 @@ export const changePassword = asyncHandler(async (req, res) => {
   admin.resetTokenHash = null;
   admin.resetTokenExpiresAt = null;
   await admin.save();
-  res.clearCookie(SESSION_COOKIE, { path: "/" });
+  res.clearCookie(SESSION_COOKIE, { httpOnly: true, sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", secure: process.env.NODE_ENV === "production", path: "/" });
   await recordAudit(req, "auth.password_changed", "Admin", admin._id);
   return res.json({ success: true });
 });

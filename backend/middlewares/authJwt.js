@@ -7,7 +7,9 @@ export const SESSION_COOKIE = "weddingbingo_admin_session";
 export const cookieOptions = (remember = false) => ({
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+  // Vercel frontend and Render API are different sites in production.
+  // None is required so the browser can send this secure session cookie cross-site.
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   maxAge: remember ? 30 * 24 * 60 * 60 * 1000 : 2 * 60 * 60 * 1000,
   path: "/",
 });
