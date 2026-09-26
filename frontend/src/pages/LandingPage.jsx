@@ -2,19 +2,56 @@ import React, { useState, useEffect } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
+import { api } from "../api/client.js";
 
-// 6 Alternating Sentences with Toggling Colors
-const WORDS = [
-  { text: "One Moment at a Time", color: "text-[#C6A75E]" },
-  { text: "Crafting Unforgettable Stories", color: "text-white" },
-  { text: "Preserving Every Sacred Emotion", color: "text-[#C6A75E]" },
-  { text: "Turning Memories into Pure Art", color: "text-white" },
-  { text: "Framing Your Eternal Romance", color: "text-[#C6A75E]" },
-  { text: "Celebrating Love in Every Detail", color: "text-white" },
-];
+// Fallback hero content shown until the API responds (or if it's
+// unreachable), so the section never renders empty. Mirrors the site's
+// original 6 alternating sentences, subtitle, background, and CTA.
+const DEFAULT_HERO = {
+  subtitle: "Luxury Wedding Photography that tells your timeless love story.",
+  ctaLabel: "View Testimonials",
+  backgroundImage: "https://ik.imagekit.io/weddingbingo/wb_hero.jpg",
+  rotatingPhrases: [
+    { text: "One Moment at a Time", color: "gold" },
+    { text: "Crafting Unforgettable Stories", color: "white" },
+    { text: "Preserving Every Sacred Emotion", color: "gold" },
+    { text: "Turning Memories into Pure Art", color: "white" },
+    { text: "Framing Your Eternal Romance", color: "gold" },
+    { text: "Celebrating Love in Every Detail", color: "white" },
+  ],
+};
+
+const colorClass = (color) => (color === "white" ? "text-white" : "text-[#C6A75E]");
 
 const LandingPage = () => {
   const { scrollY } = useScroll();
+  const [hero, setHero] = useState(DEFAULT_HERO);
+
+  useEffect(() => {
+    let active = true;
+    api
+      .get("/api/home-content")
+      .then(({ data }) => {
+        const content = data?.content?.hero;
+        if (!active || !content) return;
+        setHero({
+          subtitle: content.subtitle || DEFAULT_HERO.subtitle,
+          ctaLabel: content.ctaLabel || DEFAULT_HERO.ctaLabel,
+          backgroundImage: content.backgroundImage || DEFAULT_HERO.backgroundImage,
+          rotatingPhrases: Array.isArray(content.rotatingPhrases) && content.rotatingPhrases.length
+            ? content.rotatingPhrases
+            : DEFAULT_HERO.rotatingPhrases,
+        });
+      })
+      .catch(() => {
+        // Keep the default hero content on error.
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const WORDS = hero.rotatingPhrases;
 
   // Parallax background, zoom & opacity scroll effects
   const yBg = useTransform(scrollY, [0, 600], [0, 180]);
@@ -28,7 +65,9 @@ const LandingPage = () => {
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    const currentWordObj = WORDS[wordIndex];
+    // Clamp in case WORDS shrank (e.g. right after the API content loads).
+    const safeIndex = wordIndex < WORDS.length ? wordIndex : 0;
+    const currentWordObj = WORDS[safeIndex];
     const fullText = currentWordObj.text;
 
     // Typing / Deleting speed timing
@@ -46,7 +85,7 @@ const LandingPage = () => {
         if (displayedText === "") {
           setIsDeleting(false);
           // Advance to next sentence
-          setWordIndex((prev) => (prev + 1) % WORDS.length);
+          setWordIndex(() => (safeIndex + 1) % WORDS.length);
         }
       }
     }, typingSpeed);
@@ -74,7 +113,7 @@ const LandingPage = () => {
       <motion.div style={{ y: yBg, scale: scaleBg }} className="absolute inset-0 h-full w-full">
         <img
           rel="preload"
-          src="https://ik.imagekit.io/weddingbingo/wb_hero.jpg"
+          src={hero.backgroundImage}
           alt="Wedding"
           className="h-[120%] w-full object-cover object-center"
         />
@@ -98,7 +137,7 @@ const LandingPage = () => {
           Capturing Love,
           {/* ROTATING TYPEWRITER TEXT */}
           <span className="mt-2 block min-h-[2.5em] sm:min-h-[1.8em] md:min-h-[1.4em] font-serif italic tracking-tight">
-            <span className={`inline-block transition-colors duration-500 ${WORDS[wordIndex].color}`}>
+            <span className={`inline-block transition-colors duration-500 ${colorClass(WORDS[wordIndex < WORDS.length ? wordIndex : 0]?.color)}`}>
               {displayedText}
             </span>
             {/* Blinking Cursor */}
@@ -117,7 +156,7 @@ const LandingPage = () => {
         </h1>
 
         <p className="mt-4 sm:mt-6 max-w-xs sm:max-w-md md:max-w-xl text-sm sm:text-base md:text-lg font-light leading-relaxed text-neutral-300">
-          Luxury Wedding Photography that tells your timeless love story.
+          {hero.subtitle}
         </p>
 
         {/* ACTION BUTTON WITH SWEEP & ARROW ANIMATION */}
@@ -132,7 +171,7 @@ const LandingPage = () => {
               className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent transition-transform duration-1000 ease-out group-hover:translate-x-full"
             />
 
-            <span className="relative z-10">View Testimonials</span>
+            <span className="relative z-10">{hero.ctaLabel}</span>
 
             {/* Emergent Up-Right Arrow Icon */}
             <ArrowUpRight

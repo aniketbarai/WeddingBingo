@@ -1,74 +1,65 @@
 import { useEffect, useState, useRef } from "react";
 import { ArrowUpRight, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 import { Link } from "react-router-dom";
+import { api } from "../api/client.js";
 
-const decodeUrl = (encodedUrl) => {
-  try {
-    return window.atob(encodedUrl);
-  } catch {
-    return "";
-  }
+// Category metadata (routing, headings) stays fixed in code — only the
+// photos + captions inside each category are admin-editable via
+// /api/home-content. These are the fallback photos shown until that loads.
+const CATEGORY_META = [
+  { id: "wedding", key: "wedding", title: "Wedding", firstLetter: "W", restTitle: "edding", linkTo: "/wedding" },
+  { id: "pre-wedding", key: "preWedding", title: "Pre-Wedding", firstLetter: "P", restTitle: "re-Wedding", linkTo: "/pre-wedding" },
+  { id: "film", key: "film", title: "Film", firstLetter: "F", restTitle: "ilm", linkTo: "/films" },
+];
+
+const DEFAULT_CATEGORY_ITEMS = {
+  wedding: [
+    {
+      image: "https://rachnaniranjan.com/wp-content/uploads/2026/01/Top-Destination-Wedding-Photographer-in-India-International-1.webp",
+      alt: "Destination wedding couple portrait",
+      caption: "Destination wedding photography, capturing the feeling of every celebration.",
+    },
+    {
+      image: "https://rachnaniranjan.com/wp-content/uploads/2025/01/rachna-niranjan-slide-07.webp",
+      alt: "Joyful wedding ceremony moment",
+      caption: "Candid wedding moments filled with joy, movement, and emotion.",
+    },
+  ],
+  preWedding: [
+    {
+      image: "https://rachnaniranjan.com/wp-content/uploads/2025/01/rachna-niranjan-banner-08.webp",
+      alt: "Pre-wedding romantic portrait",
+      caption: "Timeless pre-wedding frames set against stunning natural landscapes.",
+    },
+    {
+      image: "https://rachnaniranjan.com/wp-content/uploads/2025/01/rachna-niranjan-slide-01.webp",
+      alt: "Candid pre-wedding shoot",
+      caption: "Intimate and effortless moments shared before the big day.",
+    },
+  ],
+  film: [
+    {
+      image: "https://rachnaniranjan.com/wp-content/uploads/2025/01/rachna-niranjan-slide-04.webp",
+      alt: "Cinematic wedding film frame",
+      caption: "Cinematic wedding films brought to life with emotion and atmosphere.",
+    },
+    {
+      image: "https://rachnaniranjan.com/wp-content/uploads/2025/01/rachna-niranjan-slide-05.webp",
+      alt: "Storytelling wedding video detail",
+      caption: "Documentary-style wedding films preserving your rarest memories.",
+    },
+  ],
 };
 
-const categoriesData = [
-  {
-    id: "wedding",
-    title: "Wedding",
-    firstLetter: "W",
-    restTitle: "edding",
-    linkTo: "/wedding",
-    items: [
-      {
-        url: "aHR0cHM6Ly9yYWNobmFuaXJhbmphbi5jb20vd3AtY29udGVudC91cGxvYWRzLzIwMjYvMDEvVG9wLURlc3RpbmF0aW9uLVdlZGRpbmctUGhvdG9ncmFwaGVyLWluLUluZGlhLUludGVybmF0aW9uYWwtMS53ZWJw",
-        alt: "Destination wedding couple portrait",
-        caption: "Destination wedding photography, capturing the feeling of every celebration.",
-      },
-      {
-        url: "aHR0cHM6Ly9yYWNobmFuaXJhbmphbi5jb20vd3AtY29udGVudC91cGxvYWRzLzIwMjUvMDEvcmFjaG5hLW5pcmFuamFuLXNsaWRlLTA3LndlYnA=",
-        alt: "Joyful wedding ceremony moment",
-        caption: "Candid wedding moments filled with joy, movement, and emotion.",
-      },
-    ],
-  },
-  {
-    id: "pre-wedding",
-    title: "Pre-Wedding",
-    firstLetter: "P",
-    restTitle: "re-Wedding",
-    linkTo: "/pre-wedding",
-    items: [
-      {
-        url: "aHR0cHM6Ly9yYWNobmFuaXJhbmphbi5jb20vd3AtY29udGVudC91cGxvYWRzLzIwMjUvMDEvcmFjaG5hLW5pcmFuamFuLWJhbm5lci0wOC53ZWJw",
-        alt: "Pre-wedding romantic portrait",
-        caption: "Timeless pre-wedding frames set against stunning natural landscapes.",
-      },
-      {
-        url: "aHR0cHM6Ly9yYWNobmFuaXJhbmphbi5jb20vd3AtY29udGVudC91cGxvYWRzLzIwMjUvMDEvcmFjaG5hLW5pcmFuamFuLXNsaWRlLTAxLndlYnA=",
-        alt: "Candid pre-wedding shoot",
-        caption: "Intimate and effortless moments shared before the big day.",
-      },
-    ],
-  },
-  {
-    id: "film",
-    title: "Film",
-    firstLetter: "F",
-    restTitle: "ilm",
-    linkTo: "/films",
-    items: [
-      {
-        url: "aHR0cHM6Ly9yYWNobmFuaXJhbmphbi5jb20vd3AtY29udGVudC91cGxvYWRzLzIwMjUvMDEvcmFjaG5hLW5pcmFuamFuLXNsaWRlLTA0LndlYnA=",
-        alt: "Cinematic wedding film frame",
-        caption: "Cinematic wedding films brought to life with emotion and atmosphere.",
-      },
-      {
-        url: "aHR0cHM6Ly9yYWNobmFuaXJhbmphbi5jb20vd3AtY29udGVudC91cGxvYWRzLzIwMjUvMDEvcmFjaG5hLW5pcmFuamFuLXNsaWRlLTA1LndlYnA=",
-        alt: "Storytelling wedding video detail",
-        caption: "Documentary-style wedding films preserving your rarest memories.",
-      },
-    ],
-  },
-];
+const buildCategoriesData = (categoryItems) =>
+  CATEGORY_META.map((meta) => ({
+    ...meta,
+    items: (categoryItems[meta.key]?.length ? categoryItems[meta.key] : DEFAULT_CATEGORY_ITEMS[meta.key]).map((item) => ({
+      url: item.image,
+      alt: item.alt,
+      caption: item.caption,
+    })),
+  }));
 
 function AnimatedPortfolioCard({ item, index, onClick }) {
   const [isVisible, setIsVisible] = useState(false);
@@ -110,7 +101,7 @@ function AnimatedPortfolioCard({ item, index, onClick }) {
     >
       <div className="aspect-[16/10] w-full">
         <img
-          src={decodeUrl(item.url)}
+          src={item.url}
           alt={item.alt}
           className="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-105"
           loading="lazy"
@@ -129,6 +120,23 @@ function AnimatedPortfolioCard({ item, index, onClick }) {
 
 export default function Wedding() {
   const [selectedImage, setSelectedImage] = useState(null);
+  const [categoriesData, setCategoriesData] = useState(() => buildCategoriesData({}));
+
+  useEffect(() => {
+    let active = true;
+    api
+      .get("/api/home-content")
+      .then(({ data }) => {
+        const categories = data?.content?.categories;
+        if (active && categories) setCategoriesData(buildCategoriesData(categories));
+      })
+      .catch(() => {
+        // Keep the default photos on error.
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const allItems = categoriesData.flatMap((category) => category.items);
   const selectedIndex = selectedImage ? allItems.findIndex((item) => item.url === selectedImage.url) : null;
@@ -228,7 +236,7 @@ export default function Wedding() {
             <ChevronLeft size={20} />
           </button>
           <figure className="flex max-h-full max-w-5xl flex-col items-center" onClick={(event) => event.stopPropagation()}>
-            <img src={decodeUrl(selectedImage.url)} alt={selectedImage.alt} className="max-h-[80vh] max-w-full object-contain shadow-2xl" />
+            <img src={selectedImage.url} alt={selectedImage.alt} className="max-h-[80vh] max-w-full object-contain shadow-2xl" />
             <figcaption className="mt-3 max-w-lg text-center text-xs leading-5 text-zinc-300">{selectedImage.caption}</figcaption>
           </figure>
           <button

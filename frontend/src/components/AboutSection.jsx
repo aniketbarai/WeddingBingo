@@ -1,8 +1,11 @@
 // eslint-disable-next-line no-unused-vars
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { api } from "../api/client.js";
 
-const storyData = [
+// Fallback shown until the API responds (or if it's unreachable), so the
+// section never renders empty. Mirrors the site's original 3 cards.
+const DEFAULT_HIGHLIGHTS = [
   {
     tag: "THE ORIGIN",
     title: "Our Beginning",
@@ -94,6 +97,23 @@ function RollercoasterCard({ item, index, progress }) {
 
 export default function AboutSection() {
   const containerRef = useRef(null);
+  const [highlights, setHighlights] = useState(DEFAULT_HIGHLIGHTS);
+
+  useEffect(() => {
+    let active = true;
+    api
+      .get("/api/home-content")
+      .then(({ data }) => {
+        const items = data?.content?.highlights;
+        if (active && Array.isArray(items) && items.length) setHighlights(items);
+      })
+      .catch(() => {
+        // Keep the default 3 cards on error.
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -162,7 +182,7 @@ export default function AboutSection() {
 
           {/* RIGHT: CARDS STACK */}
           <div className="relative col-span-12 md:col-span-7 flex h-[380px] sm:h-[420px] md:h-[460px] w-full flex-col justify-center perspective-1000">
-            {storyData.map((item, index) => (
+            {highlights.map((item, index) => (
               <RollercoasterCard
                 key={index}
                 item={item}
