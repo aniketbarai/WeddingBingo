@@ -5,7 +5,6 @@ export const NAV_LINKS = [
   { name: "Home", link: "/" },
   { name: "About", link: "/about" },
   { name: "Packages", link: "/packages" },
-  { name: "Services", link: "/services" },
   { name: "Gallery", link: "/gallery" },
   { name: "Contact", link: "/contact" },
 ];

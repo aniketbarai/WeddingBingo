@@ -21,13 +21,13 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminGallery from "./pages/admin/AdminGallery";
 import AdminGlimpse from "./pages/admin/AdminGlimpse";
 import AdminAboutStory from "./pages/admin/AdminAboutStory";
+import AdminBanner from "./pages/admin/AdminBanner";
 import AdminReviews from "./pages/admin/AdminReviews";
 import AdminPackages from "./pages/admin/AdminPackages";
 import AdminInquiries from "./pages/admin/AdminInquiries";
 import AdminSettings from "./pages/admin/AdminSettings";
 
 import AboutSection from "./components/AboutSection";
-import ServicesSection from "./components/ServicesSection";
 import PackageSection from "./components/PackageSection";
 import TestimonialSection from "./components/TestimonialSection";
 
@@ -36,7 +36,9 @@ import WeddingPhotograpgy from "./pages/WeddingPhotography"
 import DroneCover from "./pages/DroneCover"
 import PreWeddingShoots from "./pages/PreWeddingShoots";
 import CinematicVideography from "./pages/CinematicVideography";
-import ServiceDetail from "./pages/ServiceDetail";
+import WeddingCategory from "./pages/WeddingCategory";
+import PreWeddingCategory from "./pages/PreWeddingCategory";
+import FilmsCategory from "./pages/FilmsCategory";
 
 
 function App() {
@@ -60,12 +62,17 @@ function App() {
             {/* Public */}
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<AboutSection />} />
-            <Route path="/services" element={<ServicesSection />} />
             <Route path="/packages" element={<PackageSection />} />
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/gallery/story/:slug" element={<StoryDetail />} />
             <Route path="/testimonials" element={<TestimonialSection />} />
             <Route path="/contact" element={<ContactPage />} />
+
+            {/* "View more" detail pages linked from the homepage
+                Wedding / Pre-Wedding / Film section */}
+            <Route path="/wedding" element={<WeddingCategory />} />
+            <Route path="/pre-wedding" element={<PreWeddingCategory />} />
+            <Route path="/films" element={<FilmsCategory />} />
 
             {/* Admin - login is public, everything else requires a token */}
             <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
@@ -76,6 +83,7 @@ function App() {
             <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/glimpse" element={<ProtectedRoute><AdminGlimpse /></ProtectedRoute>} />
             <Route path="/admin/about-story" element={<ProtectedRoute><AdminAboutStory /></ProtectedRoute>} />
+            <Route path="/admin/banner" element={<ProtectedRoute><AdminBanner /></ProtectedRoute>} />
             <Route path="/admin/gallery" element={<ProtectedRoute><AdminGallery /></ProtectedRoute>} />
             <Route path="/admin/reviews" element={<ProtectedRoute><AdminReviews /></ProtectedRoute>} />
             <Route path="/admin/testimonials" element={<Navigate to="/admin/reviews" replace />} />
@@ -83,13 +91,12 @@ function App() {
             <Route path="/admin/inquiries" element={<ProtectedRoute><AdminInquiries /></ProtectedRoute>} />
             <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
 
-            {/* Legacy service URLs redirect to the real services page instead of
-                silently re-rendering Home under a different path */}
+            {/* Legacy standalone service detail pages (unrelated to the
+                removed dynamic Services section/admin CRUD) */}
             <Route path="/services/weddingp" element={<WeddingPhotograpgy />} />
             <Route path="/services/cinematic" element={<CinematicVideography />} />
             <Route path="/services/prewedshoots" element={ <PreWeddingShoots />} />
             <Route path="/services/droneCover" element={ <DroneCover />} />
-            <Route path="/services/:slug" element={<ServiceDetail />} />
             <Route path="*" element={<div className="min-h-screen bg-[#050505] px-6 py-32 text-center text-white"><h1 className="font-serif text-5xl">Page not found.</h1><p className="mt-4 text-sm text-white/45">The page you requested does not exist.</p></div>} />
           </Routes>
 

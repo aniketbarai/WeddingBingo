@@ -6,6 +6,7 @@ const ADMIN_LINKS = [
   { name: "Dashboard", link: "/admin/dashboard" },
   { name: "Glimpse", link: "/admin/glimpse" },
   { name: "About Story", link: "/admin/about-story" },
+  { name: "Banner", link: "/admin/banner" },
   { name: "Gallery", link: "/admin/gallery" },
   { name: "Reviews", link: "/admin/reviews" },
   { name: "Packages", link: "/admin/packages" },

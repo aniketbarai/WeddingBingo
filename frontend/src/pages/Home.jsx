@@ -3,7 +3,7 @@ import AboutSection from "../components/AboutSection"
 import Footer from "../components/Footer"
 import HomePortfolio from "../components/HomePortfolio"
 import FaqSection from "../components/FaqSection"
-import ServicesSection from "../components/ServicesSection"
+import HeroBanner from "../components/HeroBanner"
 import TestimonialSection from "../components/TestimonialSection"
 import CinematicHero from "./CinematicHero"
 import ContactPage from "./ContactPage"
@@ -18,7 +18,7 @@ const Home = () => {
             <AboutHorizontal />
             <AboutSection />
             <Wedding />
-            <ServicesSection />
+            <HeroBanner />
             <TestimonialSection />
             <FaqSection />
             <ContactPage />
