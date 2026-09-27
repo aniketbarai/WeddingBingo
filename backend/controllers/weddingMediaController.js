@@ -1,219 +1,124 @@
 import Wedding from "../models/Wedding.js";
-import Image from "../models/Image.js";
 import imagekit, { isImageKitConfigured } from "../config/imagekit.js";
 import { recordAudit } from "../utils/audit.js";
 
-const notFound = (res) => res.status(404).json({ success: false, message: "Wedding not found" });
+// All uploads here go to /weddingbingo/weddings/<slug>/ — a folder per couple,
+// kept separate from the shared /weddingbingo/gallery pool used by the
+// general Admin > Gallery screen.
 
-// --- Cover image -----------------------------------------------------
+const ensureImageKit = (res) => {
+  if (!isImageKitConfigured()) {
+    res.status(503).json({ success: false, message: "Image hosting is not configured. Set the IMAGEKIT_* environment variables." });
+    return false;
+  }
+  return true;
+};
 
-export const adminUploadWeddingCover = async (req, res) => {
+// Admin: add a photo to this couple's own story gallery.
+export const addWeddingMedia = async (req, res) => {
   try {
-    const wedding = await Wedding.findById(req.params.id);
-    if (!wedding) return notFound(res);
     if (!req.file) return res.status(400).json({ success: false, message: "No image file provided" });
-    if (!isImageKitConfigured()) {
-      return res.status(503).json({ success: false, message: "Image hosting is not configured. Set the IMAGEKIT_* environment variables." });
-    }
+    if (!ensureImageKit(res)) return;
+    const wedding = await Wedding.findById(req.params.id);
+    if (!wedding) return res.status(404).json({ success: false, message: "Story not found" });
 
     const uploadResult = await imagekit.upload({
       file: req.file.buffer.toString("base64"),
       fileName: req.file.originalname,
-      folder: `/weddingbingo/weddings/${wedding._id}/cover`,
+      folder: `/weddingbingo/weddings/${wedding.slug}`,
       useUniqueFileName: true,
     });
 
-    if (wedding.coverFileId) imagekit.deleteFile(wedding.coverFileId).catch(() => {});
-
-    wedding.coverImage = uploadResult.url;
-    wedding.coverFileId = uploadResult.fileId;
+    wedding.media.push({ url: uploadResult.url, fileId: uploadResult.fileId });
     await wedding.save();
+    await recordAudit(req, "wedding.media_added", "weddings", wedding._id);
+    return res.status(201).json({ success: true, item: wedding });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err?.message || "Failed to upload image" });
+  }
+};
 
-    return res.json({ success: true, wedding });
+// Admin: remove one photo from this couple's story gallery.
+export const deleteWeddingMedia = async (req, res) => {
+  try {
+    const wedding = await Wedding.findById(req.params.id);
+    if (!wedding) return res.status(404).json({ success: false, message: "Story not found" });
+    const item = wedding.media.id(req.params.mediaId);
+    if (!item) return res.status(404).json({ success: false, message: "Media item not found" });
+    if (item.fileId && isImageKitConfigured()) imagekit.deleteFile(item.fileId).catch(() => {});
+    item.deleteOne();
+    await wedding.save();
+    await recordAudit(req, "wedding.media_removed", "weddings", wedding._id);
+    return res.json({ success: true, item: wedding });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err?.message || "Failed to delete image" });
+  }
+};
+
+// Admin: set/replace the story's cover image (used on the gallery card + as video poster).
+export const setWeddingCoverImage = async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, message: "No image file provided" });
+    if (!ensureImageKit(res)) return;
+    const wedding = await Wedding.findById(req.params.id);
+    if (!wedding) return res.status(404).json({ success: false, message: "Story not found" });
+
+    const uploadResult = await imagekit.upload({
+      file: req.file.buffer.toString("base64"),
+      fileName: req.file.originalname,
+      folder: `/weddingbingo/weddings/${wedding.slug}`,
+      useUniqueFileName: true,
+    });
+
+    if (wedding.coverImageFileId && isImageKitConfigured()) imagekit.deleteFile(wedding.coverImageFileId).catch(() => {});
+    wedding.coverImage = uploadResult.url;
+    wedding.coverImageFileId = uploadResult.fileId;
+    await wedding.save();
+    await recordAudit(req, "wedding.cover_updated", "weddings", wedding._id);
+    return res.json({ success: true, item: wedding });
   } catch (err) {
     return res.status(500).json({ success: false, message: err?.message || "Failed to upload cover image" });
   }
 };
 
-export const adminDeleteWeddingCover = async (req, res) => {
+// Admin: upload/replace the hero video shown at the top of the story page.
+export const setWeddingVideo = async (req, res) => {
   try {
-    const wedding = await Wedding.findById(req.params.id);
-    if (!wedding) return notFound(res);
-
-    if (wedding.coverFileId) imagekit.deleteFile(wedding.coverFileId).catch(() => {});
-    wedding.coverImage = "";
-    wedding.coverFileId = "";
-    await wedding.save();
-
-    return res.json({ success: true, wedding });
-  } catch (err) {
-    return res.status(500).json({ success: false, message: "Failed to remove cover image" });
-  }
-};
-
-// --- Highlight video ---------------------------------------------------
-
-export const adminUploadWeddingVideo = async (req, res) => {
-  try {
-    const wedding = await Wedding.findById(req.params.id);
-    if (!wedding) return notFound(res);
     if (!req.file) return res.status(400).json({ success: false, message: "No video file provided" });
-    if (!isImageKitConfigured()) {
-      return res.status(503).json({ success: false, message: "Image hosting is not configured. Set the IMAGEKIT_* environment variables." });
-    }
+    if (!ensureImageKit(res)) return;
+    const wedding = await Wedding.findById(req.params.id);
+    if (!wedding) return res.status(404).json({ success: false, message: "Story not found" });
 
     const uploadResult = await imagekit.upload({
       file: req.file.buffer.toString("base64"),
       fileName: req.file.originalname,
-      folder: `/weddingbingo/weddings/${wedding._id}/video`,
+      folder: `/weddingbingo/weddings/${wedding.slug}`,
       useUniqueFileName: true,
     });
 
-    if (wedding.videoFileId) imagekit.deleteFile(wedding.videoFileId).catch(() => {});
-
-    wedding.video = uploadResult.url;
+    if (wedding.videoFileId && isImageKitConfigured()) imagekit.deleteFile(wedding.videoFileId).catch(() => {});
+    wedding.videoUrl = uploadResult.url;
     wedding.videoFileId = uploadResult.fileId;
     await wedding.save();
-
-    return res.json({ success: true, wedding });
+    await recordAudit(req, "wedding.video_updated", "weddings", wedding._id);
+    return res.json({ success: true, item: wedding });
   } catch (err) {
     return res.status(500).json({ success: false, message: err?.message || "Failed to upload video" });
   }
 };
 
-export const adminDeleteWeddingVideo = async (req, res) => {
+// Admin: remove the hero video.
+export const deleteWeddingVideo = async (req, res) => {
   try {
     const wedding = await Wedding.findById(req.params.id);
-    if (!wedding) return notFound(res);
-
-    if (wedding.videoFileId) imagekit.deleteFile(wedding.videoFileId).catch(() => {});
-    wedding.video = "";
+    if (!wedding) return res.status(404).json({ success: false, message: "Story not found" });
+    if (wedding.videoFileId && isImageKitConfigured()) imagekit.deleteFile(wedding.videoFileId).catch(() => {});
+    wedding.videoUrl = "";
     wedding.videoFileId = "";
     await wedding.save();
-
-    return res.json({ success: true, wedding });
+    await recordAudit(req, "wedding.video_removed", "weddings", wedding._id);
+    return res.json({ success: true, item: wedding });
   } catch (err) {
-    return res.status(500).json({ success: false, message: "Failed to remove video" });
-  }
-};
-
-// --- Photo gallery -------------------------------------------------------
-// Each gallery photo becomes its own Image document (same collection the
-// general Gallery/Portfolio uses) and its id is referenced from the
-// wedding's `gallery` array — so these behave like normal library images
-// but are only ever attached to this one story.
-
-export const adminAddWeddingGalleryImage = async (req, res) => {
-  try {
-    const wedding = await Wedding.findById(req.params.id);
-    if (!wedding) return notFound(res);
-    if (!req.file) return res.status(400).json({ success: false, message: "No image file provided" });
-    if (!isImageKitConfigured()) {
-      return res.status(503).json({ success: false, message: "Image hosting is not configured. Set the IMAGEKIT_* environment variables." });
-    }
-
-    const uploadResult = await imagekit.upload({
-      file: req.file.buffer.toString("base64"),
-      fileName: req.file.originalname,
-      folder: `/weddingbingo/weddings/${wedding._id}/gallery`,
-      useUniqueFileName: true,
-    });
-
-    const image = await Image.create({
-      src: uploadResult.url,
-      fileId: uploadResult.fileId,
-      title: (req.body.title || "").trim() || wedding.coupleNames,
-    });
-
-    wedding.gallery.push(image._id);
-    await wedding.save();
-    await wedding.populate("gallery");
-
-    return res.status(201).json({ success: true, wedding });
-  } catch (err) {
-    return res.status(500).json({ success: false, message: err?.message || "Failed to upload photo" });
-  }
-};
-
-export const adminRemoveWeddingGalleryImage = async (req, res) => {
-  try {
-    const wedding = await Wedding.findById(req.params.id);
-    if (!wedding) return notFound(res);
-
-    const { imageId } = req.params;
-    if (!wedding.gallery.some((id) => String(id) === String(imageId))) {
-      return res.status(404).json({ success: false, message: "Photo not found on this story" });
-    }
-
-    wedding.gallery = wedding.gallery.filter((id) => String(id) !== String(imageId));
-    await wedding.save();
-
-    // This image only ever belonged to this story's gallery, so clean it up
-    // fully (DB record + ImageKit asset) rather than leaving it orphaned.
-    const image = await Image.findByIdAndDelete(imageId);
-    if (image?.fileId && isImageKitConfigured()) {
-      imagekit.deleteFile(image.fileId).catch(() => {});
-    }
-
-    await wedding.populate("gallery");
-    return res.json({ success: true, wedding });
-  } catch (err) {
-    return res.status(500).json({ success: false, message: "Failed to remove photo" });
-  }
-};
-
-export const adminReorderWeddingGallery = async (req, res) => {
-  try {
-    const wedding = await Wedding.findById(req.params.id);
-    if (!wedding) return notFound(res);
-
-    const ids = Array.isArray(req.body.order) ? req.body.order : [];
-    const current = new Set(wedding.gallery.map((id) => String(id)));
-    if (!ids.length || ids.some((id) => !current.has(String(id))) || ids.length !== current.size) {
-      return res.status(400).json({ success: false, message: "order must contain exactly this story's current photo ids" });
-    }
-
-    wedding.gallery = ids;
-    await wedding.save();
-    await wedding.populate("gallery");
-
-    return res.json({ success: true, wedding });
-  } catch (err) {
-    return res.status(500).json({ success: false, message: "Failed to reorder photos" });
-  }
-};
-
-// --- Delete a whole story, cleaning up every asset it owns ---------------
-
-export const adminDeleteWeddingWithCleanup = async (req, res) => {
-  try {
-    const wedding = await Wedding.findById(req.params.id).populate("gallery");
-    if (!wedding) return notFound(res);
-
-    if (wedding.coverFileId) imagekit.deleteFile(wedding.coverFileId).catch(() => {});
-    if (wedding.videoFileId) imagekit.deleteFile(wedding.videoFileId).catch(() => {});
-    for (const image of wedding.gallery) {
-      if (image?.fileId) imagekit.deleteFile(image.fileId).catch(() => {});
-    }
-    const galleryIds = wedding.gallery.map((image) => image._id);
-    if (galleryIds.length) await Image.deleteMany({ _id: { $in: galleryIds } });
-
-    await Wedding.findByIdAndDelete(req.params.id);
-    await recordAudit(req, "crud.delete", "weddings", wedding._id);
-
-    return res.json({ success: true });
-  } catch (err) {
-    return res.status(500).json({ success: false, message: "Failed to delete story" });
-  }
-};
-
-// Admin: fetch a single wedding with its gallery populated, for the editor.
-export const adminGetWedding = async (req, res) => {
-  try {
-    const wedding = await Wedding.findById(req.params.id).populate("gallery");
-    if (!wedding) return notFound(res);
-    return res.json({ success: true, wedding });
-  } catch (err) {
-    return res.status(500).json({ success: false, message: "Failed to load story" });
+    return res.status(500).json({ success: false, message: err?.message || "Failed to remove video" });
   }
 };

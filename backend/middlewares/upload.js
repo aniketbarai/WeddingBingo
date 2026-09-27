@@ -22,3 +22,20 @@ export const upload = multer({
     cb(null, true);
   },
 });
+
+// Separate config for couple hero-video uploads (larger size limit, video mimetypes only).
+const allowedVideo = new Map([
+  ["video/mp4", [".mp4"]],
+  ["video/webm", [".webm"]],
+  ["video/quicktime", [".mov"]],
+]);
+
+export const uploadVideo = multer({
+  storage,
+  limits: { fileSize: 150 * 1024 * 1024, files: 1 },
+  fileFilter: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (!allowedVideo.has(file.mimetype) || !allowedVideo.get(file.mimetype).includes(ext)) return cb(new Error("Only MP4, WebM, or MOV videos are allowed"));
+    cb(null, true);
+  },
+});

@@ -4,55 +4,47 @@ import { Link, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ChevronLeft, ChevronRight, X } from "lucide-react";
 import Footer from "../components/Footer";
-import { api } from "../api/client.js";
-
-const formatWeddingDate = (value) => {
-  if (!value) return "";
-  try {
-    return new Date(value).toLocaleDateString("en-US", { month: "long", year: "numeric" });
-  } catch {
-    return "";
-  }
-};
+import { api } from "../api/client";
 
 export default function StoryDetail() {
   const { slug } = useParams();
-  const [story, setStory] = useState(undefined); // undefined = loading, null = not found
+  const [story, setStory] = useState(null);
+  const [notFound, setNotFound] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState(null);
 
   useEffect(() => {
     window.scrollTo({ top: 0 });
-    setStory(undefined);
-    let active = true;
-    api
-      .get(`/api/public/weddings/${slug}`)
-      .then(({ data }) => {
-        if (!active || !data?.item) return;
-        const item = data.item;
-        setStory({
-          coupleName: item.coupleNames,
-          location: item.location || "",
-          date: formatWeddingDate(item.weddingDate),
-          cover: item.coverImage,
-          videoSrc: item.video || "",
-          excerpt: item.description || "",
-          gallery: (item.gallery || []).map((img) => img.src),
-        });
-      })
-      .catch(() => {
-        if (active) setStory(null);
-      });
+  }, [slug]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setNotFound(false);
+    setStory(null);
+    (async () => {
+      try {
+        const { data } = await api.get(`/api/public/weddings/${slug}`);
+        if (!cancelled) setStory(data.item);
+      } catch {
+        if (!cancelled) setNotFound(true);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
     return () => {
-      active = false;
+      cancelled = true;
     };
   }, [slug]);
+
+  const gallery = story?.media?.map((m) => m.url) || [];
 
   useEffect(() => {
     if (!story || selectedIndex === null) return undefined;
     const onKeyDown = (e) => {
       if (e.key === "Escape") setSelectedIndex(null);
-      if (e.key === "ArrowLeft") setSelectedIndex((i) => (i - 1 + story.gallery.length) % story.gallery.length);
-      if (e.key === "ArrowRight") setSelectedIndex((i) => (i + 1) % story.gallery.length);
+      if (e.key === "ArrowLeft") setSelectedIndex((i) => (i - 1 + gallery.length) % gallery.length);
+      if (e.key === "ArrowRight") setSelectedIndex((i) => (i + 1) % gallery.length);
     };
     document.addEventListener("keydown", onKeyDown);
     document.body.style.overflow = "hidden";
@@ -60,13 +52,18 @@ export default function StoryDetail() {
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = "";
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [story, selectedIndex]);
 
-  if (story === undefined) {
-    return <div className="min-h-screen bg-white" />; // brief loading blank, avoids a flash of "not found"
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-black/10 border-t-black" />
+      </div>
+    );
   }
 
-  if (!story) {
+  if (notFound || !story) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-white px-6 text-center text-black">
         <h1 className="font-serif text-4xl">Story not found.</h1>
@@ -78,23 +75,27 @@ export default function StoryDetail() {
     );
   }
 
+  const dateLabel = story.weddingDate ? new Date(story.weddingDate).toLocaleDateString(undefined, { month: "long", year: "numeric" }) : null;
+
   return (
     <>
       <div className="bg-white">
-        {/* Hero */}
+        {/* Hero: video with title */}
         <section className="relative h-[70vh] w-full overflow-hidden sm:h-screen">
-          {story.videoSrc ? (
+          {story.videoUrl ? (
             <video
               className="absolute inset-0 h-full w-full object-cover"
-              src={story.videoSrc}
-              poster={story.cover}
+              src={story.videoUrl}
+              poster={story.coverImage || undefined}
               autoPlay
               muted
               loop
               playsInline
             />
+          ) : story.coverImage ? (
+            <img className="absolute inset-0 h-full w-full object-cover" src={story.coverImage} alt={story.coupleNames} />
           ) : (
-            <img className="absolute inset-0 h-full w-full object-cover" src={story.cover} alt={story.coupleName} />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#2b2317] to-[#0e0b07]" />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-black/40" />
 
@@ -106,29 +107,31 @@ export default function StoryDetail() {
           </Link>
 
           <div className="absolute inset-x-0 bottom-0 pb-10 text-center sm:pb-14">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#C2A35C]">
-              {story.location} &middot; {story.date}
-            </p>
+            {(story.location || dateLabel) && (
+              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#C2A35C]">
+                {[story.location, dateLabel].filter(Boolean).join(" \u00b7 ")}
+              </p>
+            )}
             <h1 className="mt-2 font-serif text-4xl italic tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-[#FFF2D6] via-[#E3C77E] to-[#8C6F2D] sm:text-6xl md:text-7xl">
-              {story.coupleName}
+              {story.coupleNames}
             </h1>
           </div>
         </section>
 
-        {/* Excerpt */}
-        {story.excerpt && (
+        {/* Minimal description */}
+        {story.description && (
           <section className="px-6 py-16 text-center sm:py-20">
             <p className="mx-auto max-w-2xl font-serif text-xl italic leading-relaxed text-black/80 sm:text-2xl">
-              &ldquo;{story.excerpt}&rdquo;
+              &ldquo;{story.description}&rdquo;
             </p>
           </section>
         )}
 
-        {/* Gallery grid */}
-        {story.gallery.length > 0 && (
+        {/* This couple's own gallery */}
+        {gallery.length > 0 && (
           <section className="px-2 pb-20 sm:px-4 md:pb-28">
             <div className="mx-auto grid max-w-6xl grid-cols-2 gap-1 sm:grid-cols-3">
-              {story.gallery.map((src, index) => (
+              {gallery.map((src, index) => (
                 <button
                   key={src + index}
                   type="button"
@@ -138,7 +141,7 @@ export default function StoryDetail() {
                 >
                   <img
                     src={src}
-                    alt={`${story.coupleName} photo ${index + 1}`}
+                    alt={`${story.coupleNames} photo ${index + 1}`}
                     className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-105"
                     loading="lazy"
                   />
@@ -174,7 +177,7 @@ export default function StoryDetail() {
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                setSelectedIndex((i) => (i - 1 + story.gallery.length) % story.gallery.length);
+                setSelectedIndex((i) => (i - 1 + gallery.length) % gallery.length);
               }}
               className="absolute left-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 text-white transition hover:bg-white/20 sm:left-8"
               aria-label="Previous photo"
@@ -182,8 +185,8 @@ export default function StoryDetail() {
               <ChevronLeft size={22} />
             </button>
             <img
-              src={story.gallery[selectedIndex]}
-              alt={`${story.coupleName} photo ${selectedIndex + 1}`}
+              src={gallery[selectedIndex]}
+              alt={`${story.coupleNames} photo ${selectedIndex + 1}`}
               className="max-h-[85vh] max-w-full object-contain shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             />
@@ -191,7 +194,7 @@ export default function StoryDetail() {
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                setSelectedIndex((i) => (i + 1) % story.gallery.length);
+                setSelectedIndex((i) => (i + 1) % gallery.length);
               }}
               className="absolute right-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 text-white transition hover:bg-white/20 sm:right-8"
               aria-label="Next photo"

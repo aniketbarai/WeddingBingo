@@ -19,12 +19,11 @@ import AdminForgotPassword from "./pages/admin/AdminForgotPassword";
 import AdminResetPassword from "./pages/admin/AdminResetPassword";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminGallery from "./pages/admin/AdminGallery";
+import AdminWeddings from "./pages/admin/AdminWeddings";
 import AdminGlimpse from "./pages/admin/AdminGlimpse";
 import AdminAboutStory from "./pages/admin/AdminAboutStory";
 import AdminHomeContent from "./pages/admin/AdminHomeContent";
 import AdminBanner from "./pages/admin/AdminBanner";
-import AdminWeddings from "./pages/admin/AdminWeddings";
-import AdminGalleryHero from "./pages/admin/AdminGalleryHero";
 import AdminReviews from "./pages/admin/AdminReviews";
 import AdminPackages from "./pages/admin/AdminPackages";
 import AdminInquiries from "./pages/admin/AdminInquiries";
@@ -88,9 +87,8 @@ function App() {
             <Route path="/admin/glimpse" element={<ProtectedRoute><AdminGlimpse /></ProtectedRoute>} />
             <Route path="/admin/about-story" element={<ProtectedRoute><AdminAboutStory /></ProtectedRoute>} />
             <Route path="/admin/banner" element={<ProtectedRoute><AdminBanner /></ProtectedRoute>} />
-            <Route path="/admin/weddings" element={<ProtectedRoute><AdminWeddings /></ProtectedRoute>} />
-            <Route path="/admin/gallery-hero" element={<ProtectedRoute><AdminGalleryHero /></ProtectedRoute>} />
             <Route path="/admin/gallery" element={<ProtectedRoute><AdminGallery /></ProtectedRoute>} />
+            <Route path="/admin/weddings" element={<ProtectedRoute><AdminWeddings /></ProtectedRoute>} />
             <Route path="/admin/reviews" element={<ProtectedRoute><AdminReviews /></ProtectedRoute>} />
             <Route path="/admin/testimonials" element={<Navigate to="/admin/reviews" replace />} />
             <Route path="/admin/packages" element={<ProtectedRoute><AdminPackages /></ProtectedRoute>} />
