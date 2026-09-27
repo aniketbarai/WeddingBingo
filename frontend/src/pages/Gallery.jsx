@@ -3,28 +3,46 @@ import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion"
 import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 import Footer from "../components/Footer";
-import { heroStory, portfolioItems, stories } from "../data/galleryDemoData";
+import { api } from "../api/client.js";
 
 /* ---------------------------------------------------------------------- */
-/*  Hero: full height/width image + overlaid couple name ("him weds her") */
+/*  Hero: full height/width image (or video) + overlaid couple name       */
 /* ---------------------------------------------------------------------- */
-function GalleryHero() {
+function GalleryHero({ hero }) {
   const { scrollY } = useScroll();
   const imgY = useTransform(scrollY, [0, 600], [0, 150]);
   const textY = useTransform(scrollY, [0, 600], [0, 60]);
   const textOpacity = useTransform(scrollY, [0, 400], [1, 0]);
 
+  if (!hero) return null;
+
   return (
     <section className="relative h-screen w-full overflow-hidden bg-white">
-      <motion.img
-        style={{ y: imgY, scale: 1.08 }}
-        initial={{ scale: 1.25, opacity: 0 }}
-        animate={{ scale: 1.08, opacity: 1 }}
-        transition={{ duration: 1.6, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute inset-0 h-full w-full object-cover"
-        src={heroStory.poster}
-        alt={heroStory.coupleName}
-      />
+      {hero.video ? (
+        <motion.video
+          style={{ y: imgY, scale: 1.08 }}
+          initial={{ scale: 1.25, opacity: 0 }}
+          animate={{ scale: 1.08, opacity: 1 }}
+          transition={{ duration: 1.6, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute inset-0 h-full w-full object-cover"
+          src={hero.video}
+          poster={hero.poster}
+          autoPlay
+          muted
+          loop
+          playsInline
+        />
+      ) : (
+        <motion.img
+          style={{ y: imgY, scale: 1.08 }}
+          initial={{ scale: 1.25, opacity: 0 }}
+          animate={{ scale: 1.08, opacity: 1 }}
+          transition={{ duration: 1.6, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute inset-0 h-full w-full object-cover"
+          src={hero.poster}
+          alt={hero.coupleName}
+        />
+      )}
       <div className="absolute inset-0 bg-gradient-to-t from-white via-white/10 to-white/20" />
 
       <motion.div style={{ y: textY, opacity: textOpacity }} className="absolute inset-x-0 bottom-0 pb-6 sm:pb-8">
@@ -75,19 +93,19 @@ const cardVariants = {
   },
 };
 
-function PortfolioMosaic() {
+function PortfolioMosaic({ items }) {
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [direction, setDirection] = useState(1);
-  const selectedItem = selectedIndex === null ? null : portfolioItems[selectedIndex];
+  const selectedItem = selectedIndex === null ? null : items[selectedIndex];
 
   const close = () => setSelectedIndex(null);
   const prev = () => {
     setDirection(-1);
-    setSelectedIndex((i) => (i === null ? 0 : (i - 1 + portfolioItems.length) % portfolioItems.length));
+    setSelectedIndex((i) => (i === null ? 0 : (i - 1 + items.length) % items.length));
   };
   const next = () => {
     setDirection(1);
-    setSelectedIndex((i) => (i === null ? 0 : (i + 1) % portfolioItems.length));
+    setSelectedIndex((i) => (i === null ? 0 : (i + 1) % items.length));
   };
 
   useEffect(() => {
@@ -104,6 +122,8 @@ function PortfolioMosaic() {
       document.body.style.overflow = "";
     };
   }, [selectedIndex]);
+
+  if (!items.length) return null;
 
   return (
     <section className="bg-white px-4 py-8 sm:px-6 md:py-12">
@@ -134,9 +154,9 @@ function PortfolioMosaic() {
           whileInView="show"
           viewport={{ once: true, amount: 0.1 }}
         >
-          {portfolioItems.map((item, index) => (
+          {items.map((item, index) => (
             <motion.button
-              key={item.url}
+              key={item.id}
               type="button"
               variants={cardVariants}
               whileHover={{
@@ -271,7 +291,9 @@ function PortfolioMosaic() {
 /* ---------------------------------------------------------------------- */
 /*  Stories: one card per couple -> /gallery/story/:slug                  */
 /* ---------------------------------------------------------------------- */
-function StoriesSection() {
+function StoriesSection({ stories }) {
+  if (!stories.length) return null;
+
   return (
     <section className="bg-white px-6 py-10 sm:px-10 md:py-14 lg:px-20">
       <div className="mx-auto max-w-5xl">
@@ -350,13 +372,60 @@ function StoriesSection() {
   );
 }
 
+const formatWeddingDate = (value) => {
+  if (!value) return "";
+  try {
+    return new Date(value).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  } catch {
+    return "";
+  }
+};
+
 export default function Gallery() {
+  const [hero, setHero] = useState(null);
+  const [portfolioItems, setPortfolioItems] = useState([]);
+  const [stories, setStories] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+
+    api.get("/api/gallery-hero").then(({ data }) => {
+      if (active && data?.hero) setHero(data.hero);
+    }).catch(() => {});
+
+    api.get("/api/images", { params: { limit: 16 } }).then(({ data }) => {
+      if (!active) return;
+      const images = Array.isArray(data?.images) ? data.images : [];
+      setPortfolioItems(images.map((img) => ({ id: img._id, url: img.src, alt: img.title || "Wedding Bingo portfolio photo", caption: img.title || "" })));
+    }).catch(() => {});
+
+    api.get("/api/public/weddings").then(({ data }) => {
+      if (!active) return;
+      const items = Array.isArray(data?.items) ? data.items : [];
+      setStories(
+        items
+          .filter((item) => item.coverImage)
+          .map((item) => ({
+            slug: item.slug,
+            coupleName: item.coupleNames,
+            location: item.location || "",
+            date: formatWeddingDate(item.weddingDate),
+            cover: item.coverImage,
+          })),
+      );
+    }).catch(() => {});
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   return (
     <>
       <div className="bg-white">
-        <GalleryHero />
-        <PortfolioMosaic />
-        <StoriesSection />
+        <GalleryHero hero={hero} />
+        <PortfolioMosaic items={portfolioItems} />
+        <StoriesSection stories={stories} />
       </div>
       <Footer />
     </>

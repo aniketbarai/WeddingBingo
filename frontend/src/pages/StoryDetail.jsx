@@ -4,15 +4,47 @@ import { Link, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ChevronLeft, ChevronRight, X } from "lucide-react";
 import Footer from "../components/Footer";
-import { stories } from "../data/galleryDemoData";
+import { api } from "../api/client.js";
+
+const formatWeddingDate = (value) => {
+  if (!value) return "";
+  try {
+    return new Date(value).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  } catch {
+    return "";
+  }
+};
 
 export default function StoryDetail() {
   const { slug } = useParams();
-  const story = stories.find((s) => s.slug === slug);
+  const [story, setStory] = useState(undefined); // undefined = loading, null = not found
   const [selectedIndex, setSelectedIndex] = useState(null);
 
   useEffect(() => {
     window.scrollTo({ top: 0 });
+    setStory(undefined);
+    let active = true;
+    api
+      .get(`/api/public/weddings/${slug}`)
+      .then(({ data }) => {
+        if (!active || !data?.item) return;
+        const item = data.item;
+        setStory({
+          coupleName: item.coupleNames,
+          location: item.location || "",
+          date: formatWeddingDate(item.weddingDate),
+          cover: item.coverImage,
+          videoSrc: item.video || "",
+          excerpt: item.description || "",
+          gallery: (item.gallery || []).map((img) => img.src),
+        });
+      })
+      .catch(() => {
+        if (active) setStory(null);
+      });
+    return () => {
+      active = false;
+    };
   }, [slug]);
 
   useEffect(() => {
@@ -29,6 +61,10 @@ export default function StoryDetail() {
       document.body.style.overflow = "";
     };
   }, [story, selectedIndex]);
+
+  if (story === undefined) {
+    return <div className="min-h-screen bg-white" />; // brief loading blank, avoids a flash of "not found"
+  }
 
   if (!story) {
     return (
@@ -47,15 +83,19 @@ export default function StoryDetail() {
       <div className="bg-white">
         {/* Hero */}
         <section className="relative h-[70vh] w-full overflow-hidden sm:h-screen">
-          <video
-            className="absolute inset-0 h-full w-full object-cover"
-            src={story.videoSrc}
-            poster={story.cover}
-            autoPlay
-            muted
-            loop
-            playsInline
-          />
+          {story.videoSrc ? (
+            <video
+              className="absolute inset-0 h-full w-full object-cover"
+              src={story.videoSrc}
+              poster={story.cover}
+              autoPlay
+              muted
+              loop
+              playsInline
+            />
+          ) : (
+            <img className="absolute inset-0 h-full w-full object-cover" src={story.cover} alt={story.coupleName} />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-black/40" />
 
           <Link
@@ -76,33 +116,37 @@ export default function StoryDetail() {
         </section>
 
         {/* Excerpt */}
-        <section className="px-6 py-16 text-center sm:py-20">
-          <p className="mx-auto max-w-2xl font-serif text-xl italic leading-relaxed text-black/80 sm:text-2xl">
-            &ldquo;{story.excerpt}&rdquo;
-          </p>
-        </section>
+        {story.excerpt && (
+          <section className="px-6 py-16 text-center sm:py-20">
+            <p className="mx-auto max-w-2xl font-serif text-xl italic leading-relaxed text-black/80 sm:text-2xl">
+              &ldquo;{story.excerpt}&rdquo;
+            </p>
+          </section>
+        )}
 
         {/* Gallery grid */}
-        <section className="px-2 pb-20 sm:px-4 md:pb-28">
-          <div className="mx-auto grid max-w-6xl grid-cols-2 gap-1 sm:grid-cols-3">
-            {story.gallery.map((src, index) => (
-              <button
-                key={src + index}
-                type="button"
-                onClick={() => setSelectedIndex(index)}
-                className="group relative aspect-[4/5] overflow-hidden bg-zinc-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-black"
-                aria-label={`Open photo ${index + 1}`}
-              >
-                <img
-                  src={src}
-                  alt={`${story.coupleName} photo ${index + 1}`}
-                  className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-105"
-                  loading="lazy"
-                />
-              </button>
-            ))}
-          </div>
-        </section>
+        {story.gallery.length > 0 && (
+          <section className="px-2 pb-20 sm:px-4 md:pb-28">
+            <div className="mx-auto grid max-w-6xl grid-cols-2 gap-1 sm:grid-cols-3">
+              {story.gallery.map((src, index) => (
+                <button
+                  key={src + index}
+                  type="button"
+                  onClick={() => setSelectedIndex(index)}
+                  className="group relative aspect-[4/5] overflow-hidden bg-zinc-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-black"
+                  aria-label={`Open photo ${index + 1}`}
+                >
+                  <img
+                    src={src}
+                    alt={`${story.coupleName} photo ${index + 1}`}
+                    className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-105"
+                    loading="lazy"
+                  />
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
       <Footer />
 

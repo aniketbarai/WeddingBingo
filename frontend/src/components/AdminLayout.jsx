@@ -8,6 +8,8 @@ const ADMIN_LINKS = [
   { name: "Glimpse", link: "/admin/glimpse" },
   { name: "About Story", link: "/admin/about-story" },
   { name: "Banner", link: "/admin/banner" },
+  { name: "Gallery Hero", link: "/admin/gallery-hero" },
+  { name: "Weddings & Stories", link: "/admin/weddings" },
   { name: "Gallery", link: "/admin/gallery" },
   { name: "Reviews", link: "/admin/reviews" },
   { name: "Packages", link: "/admin/packages" },
