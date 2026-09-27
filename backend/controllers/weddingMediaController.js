@@ -1,10 +1,11 @@
 import Wedding from "../models/Wedding.js";
+import Image from "../models/Image.js";
 import imagekit, { isImageKitConfigured } from "../config/imagekit.js";
 import { recordAudit } from "../utils/audit.js";
 
-// All uploads here go to /weddingbingo/weddings/<slug>/ — a folder per couple,
-// kept separate from the shared /weddingbingo/gallery pool used by the
-// general Admin > Gallery screen.
+// Story uploads go to /weddingbingo/weddings/<slug>/ — a folder per couple.
+// They can remain story-only or optionally create a linked Image record in the
+// general gallery pool.
 
 const ensureImageKit = (res) => {
   if (!isImageKitConfigured()) {
@@ -29,10 +30,20 @@ export const addWeddingMedia = async (req, res) => {
       useUniqueFileName: true,
     });
 
-    wedding.media.push({ url: uploadResult.url, fileId: uploadResult.fileId });
+    const showInGallery = String(req.body.showInGallery || "").toLowerCase() === "true";
+    let image = null;
+    if (showInGallery) {
+      image = await Image.create({
+        src: uploadResult.url,
+        fileId: uploadResult.fileId,
+        title: (req.body.title || wedding.coupleNames || "").trim(),
+        storyId: wedding._id,
+      });
+    }
+    wedding.media.push({ url: uploadResult.url, fileId: uploadResult.fileId, imageId: image?._id || null });
     await wedding.save();
     await recordAudit(req, "wedding.media_added", "weddings", wedding._id);
-    return res.status(201).json({ success: true, item: wedding });
+    return res.status(201).json({ success: true, item: wedding, image });
   } catch (err) {
     return res.status(500).json({ success: false, message: err?.message || "Failed to upload image" });
   }
@@ -45,6 +56,7 @@ export const deleteWeddingMedia = async (req, res) => {
     if (!wedding) return res.status(404).json({ success: false, message: "Story not found" });
     const item = wedding.media.id(req.params.mediaId);
     if (!item) return res.status(404).json({ success: false, message: "Media item not found" });
+    if (item.imageId) await Image.deleteOne({ _id: item.imageId });
     if (item.fileId && isImageKitConfigured()) imagekit.deleteFile(item.fileId).catch(() => {});
     item.deleteOne();
     await wedding.save();
@@ -52,6 +64,40 @@ export const deleteWeddingMedia = async (req, res) => {
     return res.json({ success: true, item: wedding });
   } catch (err) {
     return res.status(500).json({ success: false, message: err?.message || "Failed to delete image" });
+  }
+};
+
+// Admin: toggle one existing story photo in the general gallery.
+export const toggleWeddingMediaGallery = async (req, res) => {
+  try {
+    const wedding = await Wedding.findById(req.params.id);
+    if (!wedding) return res.status(404).json({ success: false, message: "Story not found" });
+    const item = wedding.media.id(req.params.mediaId);
+    if (!item) return res.status(404).json({ success: false, message: "Media item not found" });
+
+    const showInGallery = String(req.body.showInGallery || "").toLowerCase() === "true";
+    if (showInGallery) {
+      if (!item.imageId) {
+        const image = await Image.create({
+          src: item.url,
+          fileId: item.fileId,
+          title: wedding.coupleNames || "",
+          storyId: wedding._id,
+        });
+        item.imageId = image._id;
+      } else {
+        await Image.findByIdAndUpdate(item.imageId, { storyId: wedding._id, src: item.url, fileId: item.fileId });
+      }
+    } else if (item.imageId) {
+      await Image.deleteOne({ _id: item.imageId });
+      item.imageId = null;
+    }
+
+    await wedding.save();
+    await recordAudit(req, showInGallery ? "wedding.media_shared" : "wedding.media_unshared", "weddings", wedding._id, { mediaId: item._id });
+    return res.json({ success: true, item: wedding });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err?.message || "Failed to update gallery visibility" });
   }
 };
 

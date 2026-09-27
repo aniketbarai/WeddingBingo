@@ -2,7 +2,7 @@ import express from "express";
 import { requireAdminAuth, requirePermission } from "../middlewares/authJwt.js";
 import { resources, permissionNames, listResource, createResource, updateResource, deleteResource, addInquiryNote, updateInquiryStatus } from "../controllers/mvpController.js";
 import { upload, uploadVideo } from "../middlewares/upload.js";
-import { addWeddingMedia, deleteWeddingMedia, setWeddingCoverImage, setWeddingVideo, deleteWeddingVideo } from "../controllers/weddingMediaController.js";
+import { addWeddingMedia, deleteWeddingMedia, toggleWeddingMediaGallery, setWeddingCoverImage, setWeddingVideo, deleteWeddingVideo } from "../controllers/weddingMediaController.js";
 
 const router = express.Router();
 router.use(requireAdminAuth);
@@ -24,10 +24,11 @@ Object.keys(resources).forEach((resource) => {
 });
 
 // Per-couple story media: hero video, cover image, and this couple's own
-// photo gallery — each stored on the Wedding doc, separate from the shared
-// gallery pool managed under Admin > Gallery.
+// photo gallery. Story photos may optionally also create a linked record in
+// the shared gallery pool managed under Admin > Gallery.
 router.post("/weddings/:id/media", requirePermission("portfolio.update"), upload.single("image"), addWeddingMedia);
 router.delete("/weddings/:id/media/:mediaId", requirePermission("portfolio.update"), deleteWeddingMedia);
+router.patch("/weddings/:id/media/:mediaId/gallery", requirePermission("portfolio.update"), toggleWeddingMediaGallery);
 router.post("/weddings/:id/cover", requirePermission("portfolio.update"), upload.single("image"), setWeddingCoverImage);
 router.post("/weddings/:id/video", requirePermission("portfolio.update"), uploadVideo.single("video"), setWeddingVideo);
 router.delete("/weddings/:id/video", requirePermission("portfolio.update"), deleteWeddingVideo);

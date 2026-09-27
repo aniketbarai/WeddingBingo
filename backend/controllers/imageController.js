@@ -1,4 +1,5 @@
 import Image from "../models/Image.js";
+import Wedding from "../models/Wedding.js";
 import fs from "fs";
 import path from "path";
 import imagekit, { isImageKitConfigured } from "../config/imagekit.js";
@@ -75,6 +76,12 @@ export const adminUploadImage = async (req, res) => {
     }
 
     const title = (req.body.title || "").trim();
+    const storyId = (req.body.storyId || "").trim();
+    let story = null;
+    if (storyId) {
+      story = await Wedding.findById(storyId).select("_id");
+      if (!story) return res.status(404).json({ success: false, message: "Selected story not found" });
+    }
     const uploadResult = await imagekit.upload({
       file: req.file.buffer.toString("base64"),
       fileName: req.file.originalname,
@@ -82,7 +89,11 @@ export const adminUploadImage = async (req, res) => {
       useUniqueFileName: true,
     });
 
-    const image = await Image.create({ src: uploadResult.url, fileId: uploadResult.fileId, title });
+    const image = await Image.create({ src: uploadResult.url, fileId: uploadResult.fileId, title, storyId: story?._id || null });
+    if (story) {
+      story.media.push({ url: image.src, fileId: image.fileId, imageId: image._id });
+      await story.save();
+    }
     return res.status(201).json({ success: true, image });
   } catch (err) {
     return res.status(500).json({ success: false, message: err?.message || "Failed to upload image" });
@@ -104,10 +115,15 @@ export const adminListImages = async (req, res) => {
 // so storage doesn't accumulate orphaned files.
 export const adminDeleteImage = async (req, res) => {
   try {
-    const image = await Image.findByIdAndDelete(req.params.id);
+    const image = await Image.findById(req.params.id);
     if (!image) {
       return res.status(404).json({ success: false, message: "Image not found" });
     }
+
+    if (image.storyId) {
+      await Wedding.updateOne({ _id: image.storyId }, { $pull: { media: { imageId: image._id } } });
+    }
+    await Image.deleteOne({ _id: image._id });
 
     if (image.fileId && isImageKitConfigured()) {
       imagekit.deleteFile(image.fileId).catch(() => {}); // best-effort; ignore if already gone

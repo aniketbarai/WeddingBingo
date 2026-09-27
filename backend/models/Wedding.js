@@ -6,6 +6,8 @@ import mongoose from "mongoose";
 const weddingMediaSchema = new mongoose.Schema({
   url: { type: String, required: true },
   fileId: { type: String, default: "" },
+  // Set when this story photo is also published in the general gallery.
+  imageId: { type: mongoose.Schema.Types.ObjectId, ref: "Image", default: null },
 }, { _id: true });
 
 const weddingSchema = new mongoose.Schema({

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { api } from "../api/client.js";
+import HomeSocialTab from "../components/HomeSocialTab.jsx";
 
 // Fallback hero content shown until the API responds (or if it's
 // unreachable), so the section never renders empty. Mirrors the site's
@@ -179,8 +180,9 @@ const LandingPage = () => {
             />
           </button>
         </div>
-      </motion.div>
-    </section>
+        </motion.div>
+        <HomeSocialTab />
+      </section>
   );
 };
 

@@ -8,11 +8,14 @@ const resolveImageSrc = (src) => (/^https?:\/\//i.test(src) ? src : `${BASE_URL}
 
 export default function AdminGallery() {
   const [images, setImages] = useState([]);
+  const [stories, setStories] = useState([]);
   const [loadingList, setLoadingList] = useState(true);
 
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [title, setTitle] = useState("");
+  const [shareToStory, setShareToStory] = useState(false);
+  const [storyId, setStoryId] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
@@ -35,6 +38,12 @@ export default function AdminGallery() {
     loadImages();
   }, [loadImages]);
 
+  useEffect(() => {
+    api.get("/api/admin/weddings", { params: { limit: 100 } })
+      .then(({ data }) => setStories(Array.isArray(data?.items) ? data.items : []))
+      .catch(() => setStories([]));
+  }, []);
+
   const applyFile = (selectedFile) => {
     if (!selectedFile) return;
     if (!selectedFile.type.startsWith("image/")) {
@@ -49,6 +58,8 @@ export default function AdminGallery() {
     setFile(null);
     setPreview(null);
     setTitle("");
+    setShareToStory(false);
+    setStoryId("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -70,12 +81,13 @@ export default function AdminGallery() {
       const formData = new FormData();
       formData.append("image", file);
       formData.append("title", title.trim());
+      if (shareToStory && storyId) formData.append("storyId", storyId);
 
       await api.post("/api/admin/images", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      toast.success("Photo added to the gallery");
+      toast.success(shareToStory && storyId ? "Photo added to the gallery and story" : "Photo added to the gallery");
       clearSelection();
       loadImages();
     } catch {
@@ -161,6 +173,34 @@ export default function AdminGallery() {
             {uploading ? "Uploading..." : "Add to Gallery"}
           </button>
         </div>
+        <div className="mt-4 rounded-xl border border-white/10 bg-white/[.03] p-4">
+          <label className="flex items-center gap-3 text-sm text-white/75">
+            <input
+              type="checkbox"
+              checked={shareToStory}
+              onChange={(e) => {
+                setShareToStory(e.target.checked);
+                if (!e.target.checked) setStoryId("");
+              }}
+              className="accent-[#c6a75e]"
+            />
+            Also show this photo in one couple story
+          </label>
+          {shareToStory && (
+            <select
+              value={storyId}
+              onChange={(e) => setStoryId(e.target.value)}
+              required
+              className="mt-3 w-full rounded-lg border border-white/15 bg-black px-3 py-2 text-sm text-white focus:border-[#c6a75e] focus:outline-none"
+            >
+              <option value="">Choose one story…</option>
+              {stories.map((story) => (
+                <option key={story._id} value={story._id}>{story.coupleNames} — {story.title}</option>
+              ))}
+            </select>
+          )}
+          <p className="mt-2 text-xs text-white/35">The photo remains in the general gallery and is linked to only the selected story.</p>
+        </div>
       </form>
 
       {/* EXISTING PHOTOS */}
@@ -190,7 +230,7 @@ export default function AdminGallery() {
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-end justify-between p-3 opacity-0 group-hover:opacity-100">
-                <span className="text-xs truncate pr-2">{img.title || "Untitled"}</span>
+                <span className="text-xs truncate pr-2">{img.title || "Untitled"}{img.storyId ? " · Shared with story" : ""}</span>
                 <button
                   onClick={() => handleDelete(img._id)}
                   className="shrink-0 w-8 h-8 rounded-full bg-rose-500/90 hover:bg-rose-500 flex items-center justify-center"

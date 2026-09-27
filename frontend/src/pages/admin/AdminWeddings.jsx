@@ -37,6 +37,7 @@ export default function AdminWeddings() {
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [pendingMedia, setPendingMedia] = useState([]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -101,7 +102,10 @@ export default function AdminWeddings() {
     }
   };
 
-  const openManage = (item) => setActive(item);
+  const openManage = (item) => {
+    setActive(item);
+    setPendingMedia([]);
+  };
 
   const uploadCover = async (file) => {
     if (!file || !active) return;
@@ -153,13 +157,21 @@ export default function AdminWeddings() {
     }
   };
 
-  const uploadMedia = async (fileList) => {
-    if (!fileList?.length || !active) return;
+  const selectMedia = (fileList) => {
+    if (!fileList?.length) return;
+    setPendingMedia(Array.from(fileList).map((file) => ({ file, showInGallery: false })));
+    if (mediaInputRef.current) mediaInputRef.current.value = "";
+  };
+
+  const uploadMedia = async () => {
+    if (!pendingMedia.length || !active) return;
     setUploadingMedia(true);
     try {
-      for (const file of fileList) {
+      for (const pending of pendingMedia) {
         const fd = new FormData();
-        fd.append("image", file);
+        fd.append("image", pending.file);
+        fd.append("showInGallery", String(pending.showInGallery));
+        if (pending.showInGallery) fd.append("title", active.coupleNames || "");
         // eslint-disable-next-line no-await-in-loop
         const { data } = await api.post(`/api/admin/weddings/${active._id}/media`, fd, {
           headers: { "Content-Type": "multipart/form-data" },
@@ -167,11 +179,27 @@ export default function AdminWeddings() {
         setActive(data.item);
       }
       toast.success("Photos added to this couple's story");
+      setPendingMedia([]);
     } catch {
       /* toasted */
     } finally {
       setUploadingMedia(false);
-      if (mediaInputRef.current) mediaInputRef.current.value = "";
+    }
+  };
+
+  const toggleMediaGallery = async (mediaId, showInGallery) => {
+    if (!active) return;
+    const previous = active;
+    setActive({
+      ...active,
+      media: active.media.map((media) => media._id === mediaId ? { ...media, imageId: showInGallery ? "pending" : null } : media),
+    });
+    try {
+      const { data } = await api.patch(`/api/admin/weddings/${active._id}/media/${mediaId}/gallery`, { showInGallery });
+      setActive(data.item);
+      toast.success(showInGallery ? "Photo added to the general gallery" : "Photo removed from the general gallery");
+    } catch {
+      setActive(previous);
     }
   };
 
@@ -448,20 +476,57 @@ export default function AdminWeddings() {
               <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-white/40">
                 This couple&apos;s story gallery ({active.media?.length || 0})
               </h3>
-              <input ref={mediaInputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => uploadMedia(e.target.files)} />
+              <input ref={mediaInputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => selectMedia(e.target.files)} />
               <button
                 onClick={() => mediaInputRef.current?.click()}
                 disabled={uploadingMedia}
                 className="mb-4 inline-flex items-center gap-2 rounded-lg border border-dashed border-white/20 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-white/60 hover:border-[#c6a75e] hover:text-[#c6a75e] disabled:opacity-40"
               >
-                <UploadCloud size={14} /> {uploadingMedia ? "Uploading…" : "Add photos"}
+                <UploadCloud size={14} /> Add photos
               </button>
+
+              {pendingMedia.length > 0 && (
+                <div className="mb-5 space-y-2 rounded-xl border border-[#c6a75e]/30 bg-[#c6a75e]/5 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-[#c6a75e]">Choose gallery visibility per photo</p>
+                  {pendingMedia.map((pending, index) => (
+                    <label key={`${pending.file.name}-${index}`} className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-xs text-white/70">
+                      <span className="min-w-0 truncate">{pending.file.name}</span>
+                      <span className="flex shrink-0 items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={pending.showInGallery}
+                          onChange={(e) => setPendingMedia((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, showInGallery: e.target.checked } : item))}
+                          className="accent-[#c6a75e]"
+                        />
+                        General gallery
+                      </span>
+                    </label>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={uploadMedia}
+                    disabled={uploadingMedia}
+                    className="mt-2 w-full rounded-lg bg-[#c6a75e] px-4 py-2 text-xs font-semibold uppercase tracking-wide text-black disabled:opacity-40"
+                  >
+                    {uploadingMedia ? "Uploading…" : `Upload ${pendingMedia.length} photo${pendingMedia.length === 1 ? "" : "s"}`}
+                  </button>
+                </div>
+              )}
 
               {active.media?.length ? (
                 <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
                   {active.media.map((m) => (
                     <div key={m._id} className="group relative aspect-square overflow-hidden rounded-lg bg-white/5">
                       <img src={m.url} alt="Story" className="h-full w-full object-cover" />
+                      <label className="absolute bottom-1.5 left-1.5 flex items-center gap-1 rounded bg-black/75 px-1.5 py-1 text-[9px] text-white/90" title="Show this photo in the general gallery">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(m.imageId)}
+                          onChange={(e) => toggleMediaGallery(m._id, e.target.checked)}
+                          className="accent-[#c6a75e]"
+                        />
+                        Gallery
+                      </label>
                       <button
                         onClick={() => removeMedia(m._id)}
                         className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-500"

@@ -8,3 +8,32 @@ body,
   margin: 0;
   padding: 0;
 }
+
+.home-social-drop {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 18px;
+  border-radius: 999px;
+  background: linear-gradient(to bottom, transparent, rgba(198, 167, 94, 0.95));
+  opacity: 0;
+  transform: translateY(-5px) rotate(14deg);
+}
+
+.home-social-drizzle-active .home-social-drop {
+  animation: home-social-drizzle 720ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes home-social-drizzle {
+  0% {
+    opacity: 0;
+    transform: translateY(-5px) rotate(14deg);
+  }
+  25% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(42px) rotate(14deg);
+  }
+}

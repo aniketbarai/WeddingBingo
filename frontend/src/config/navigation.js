@@ -3,8 +3,8 @@
 // out of sync (Footer linked to a "/portfolio" route that doesn't exist).
 export const NAV_LINKS = [
   { name: "Home", link: "/" },
-  { name: "About", link: "/about" },
-  { name: "Packages", link: "/packages" },
   { name: "Gallery", link: "/gallery" },
+  { name: "Packages", link: "/packages" },
+  { name: "About", link: "/about" },
   { name: "Contact", link: "/contact" },
 ];

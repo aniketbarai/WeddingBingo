@@ -150,21 +150,67 @@ function StoriesSection({ stories, loading }) {
   );
 }
 
+function GeneralGallerySection({ images, loading }) {
+  return (
+    <section className="bg-[#faf9f6] px-4 py-16 sm:px-8 md:py-24 lg:px-16">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-10 text-center">
+          <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-[#8C6F2D]">The complete collection</p>
+          <h2 className="mt-2 font-serif text-4xl italic text-black sm:text-5xl">Gallery</h2>
+          <div className="mx-auto mt-4 h-px w-16 bg-[#C2A35C]/60" />
+        </div>
+        {loading ? (
+          <div className="grid grid-cols-2 gap-1 sm:grid-cols-3 md:grid-cols-4">
+            {[...Array(8)].map((_, index) => <div key={index} className="aspect-[4/5] animate-pulse bg-black/5" />)}
+          </div>
+        ) : images.length === 0 ? (
+          <p className="py-10 text-center text-sm text-black/40">Photos are coming soon.</p>
+        ) : (
+          <div className="grid grid-cols-2 gap-1 sm:grid-cols-3 md:grid-cols-4">
+            {images.map((image, index) => (
+              <motion.div
+                key={image._id || `${image.src}-${index}`}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.15 }}
+                transition={{ duration: 0.45, delay: Math.min(index * 0.03, 0.25) }}
+                className="group aspect-[4/5] overflow-hidden bg-zinc-100"
+              >
+                <img
+                  src={image.src}
+                  alt={image.title || "Wedding gallery photo"}
+                  loading="lazy"
+                  className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-105"
+                />
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export default function Gallery() {
   const [stories, setStories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [images, setImages] = useState([]);
+  const [loadingStories, setLoadingStories] = useState(true);
+  const [loadingImages, setLoadingImages] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      try {
-        const { data } = await api.get("/api/public/weddings");
-        if (!cancelled) setStories(data.items || []);
-      } catch {
-        if (!cancelled) setStories([]);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+      const [storiesResult, imagesResult] = await Promise.allSettled([
+        api.get("/api/public/weddings"),
+        api.get("/api/images", { params: { limit: 60 } }),
+      ]);
+      if (cancelled) return;
+      if (storiesResult.status === "fulfilled") setStories(storiesResult.value.data.items || []);
+      else setStories([]);
+      if (imagesResult.status === "fulfilled") setImages(imagesResult.value.data.images || []);
+      else setImages([]);
+      setLoadingStories(false);
+      setLoadingImages(false);
     })();
     return () => {
       cancelled = true;
@@ -175,7 +221,8 @@ export default function Gallery() {
     <>
       <div className="bg-white">
         <GalleryHero />
-        <StoriesSection stories={stories} loading={loading} />
+        <StoriesSection stories={stories} loading={loadingStories} />
+        <GeneralGallerySection images={images} loading={loadingImages} />
       </div>
       <Footer />
     </>
